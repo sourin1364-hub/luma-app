@@ -1,0 +1,57 @@
+import { useEffect } from "react";
+import { useAuthStore } from "../../store/useAuthStore";
+import { useAppStore } from "../../store/useAppStore";
+import { ProfileSetupScreen } from "../chart/ProfileSetupScreen";
+import { ChartScreen } from "../chart/ChartScreen";
+import { AstrologyScreen } from "../astrology/AstrologyScreen";
+import { TarotMenuScreen } from "../tarot/TarotMenuScreen";
+import { TarotGalleryScreen } from "../tarot/TarotGalleryScreen";
+import { TarotReadingScreen } from "../tarot/TarotReadingScreen";
+import { TarotHistoryScreen } from "../tarot/TarotHistoryScreen";
+import { ProfileScreen } from "../gamification/ProfileScreen";
+import { SettingsScreen } from "../settings/SettingsScreen";
+import { DashboardScreen } from "../dashboard/DashboardScreen";
+import { AboutScreen } from "../about/AboutScreen";
+import { getWesternZodiac, getElementFromZodiac } from "../../lib/astrology";
+
+export function HomeScreen() {
+  const currentUser = useAuthStore((state) => state.currentUser);
+  const currentRoute = useAppStore((state) => state.currentRoute);
+
+  useEffect(() => {
+    if (currentUser?.birthData) {
+      const m = Number(currentUser.birthData.month) || 3;
+      const d = Number(currentUser.birthData.day) || 21;
+      const zodiac = getWesternZodiac(m, d) || "aries";
+      const element = getElementFromZodiac(zodiac) || "fire";
+      document.documentElement.setAttribute("data-element", element);
+    } else {
+      document.documentElement.setAttribute("data-element", "water");
+    }
+    return () => document.documentElement.removeAttribute("data-element");
+  }, [currentUser?.birthData]);
+
+  if (!currentUser) return null;
+
+  const hasValidBirthData = 
+    currentUser.birthData && 
+    typeof currentUser.birthData.year === "number" && currentUser.birthData.year > 1900;
+
+  if (!hasValidBirthData && currentRoute !== "settings" && currentRoute !== "about") {
+    return <ProfileSetupScreen />;
+  }
+
+  if (currentRoute === "home") return <DashboardScreen />;
+  if (currentRoute === "chart") return <ChartScreen />;
+  if (currentRoute === "astrology") return <AstrologyScreen />;
+  if (currentRoute === "tarot_menu") return <TarotMenuScreen />;
+  if (currentRoute === "tarot_library") return <TarotGalleryScreen />;
+  if (currentRoute === "tarot_history") return <TarotHistoryScreen />;
+  if (currentRoute === "reading") return <TarotReadingScreen />;
+  if (currentRoute === "profile") return <ProfileScreen />;
+  if (currentRoute === "settings") return <SettingsScreen />;
+  if (currentRoute === "profile_setup") return <ProfileSetupScreen />;
+  if (currentRoute === "about") return <AboutScreen />;
+
+  return <DashboardScreen />;
+}
