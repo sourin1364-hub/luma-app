@@ -231,17 +231,17 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="username" className="text-[var(--text-muted)]">شناسه کاربری (فقط انگلیسی)</Label>
-              <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="مثلاً: ali_reza" className="bg-[var(--bg-main)] border-slate-700 text-white" />
+              <input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="مثلاً: ali_reza" className="lux-input-field" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="password" className="text-[var(--text-muted)]">{t("password")}</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="" className="bg-[var(--bg-main)] border-slate-700 text-white" />
+              <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="رمز عبور" className="lux-input-field" />
             </div>
 
             {!isLogin && (
               <div className="space-y-1.5">
                 <Label htmlFor="confirmPassword" className="text-[var(--text-muted)]">تأیید رمز عبور</Label>
-                <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="" className="bg-[var(--bg-main)] border-slate-700 text-white" />
+                <input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="تأیید رمز عبور" className="lux-input-field" />
               </div>
             )}
 
