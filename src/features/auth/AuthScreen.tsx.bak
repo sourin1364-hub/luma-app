@@ -44,17 +44,13 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // حالت‌های جدید برای بازیابی رمز با سوال امنیتی
   const [isForgotPassword, setIsForgotPassword] = useState(false);
-
   
-  // فیلدهای بازیابی
   const [recYear, setRecYear] = useState("");
   const [recMonth, setRecMonth] = useState("");
   const [recDay, setRecDay] = useState("");
   const [recMotherName, setRecMotherName] = useState("");
   const [newPassword, setNewPassword] = useState("");
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,7 +98,6 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
 
     setLoading(true);
     
-    // فراخوانی تابع امن در Supabase
     const { data, error } = await supabase.rpc('reset_password_with_security_questions', {
       p_username: username.trim(),
       p_year: Number(recYear),
@@ -144,7 +139,6 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
     setConfirmPassword("");
   };
 
-  // صفحه بازیابی رمز با سوال امنیتی
   if (isForgotPassword) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200 bg-[#0B0D1A]" dir="rtl">
@@ -208,7 +202,6 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
     );
   }
 
-  // صفحه ورود/ثبت‌نام اصلی
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200 bg-[#0B0D1A]" dir="rtl">
       {isUpgrade && (
@@ -220,6 +213,8 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
           <h1 className="text-5xl font-logo font-bold tracking-[0.2em]">LUMA</h1>
         </div>
         <p className="text-[#8B5CF6] font-medium">به دنیای درون خود خوش آمدید</p>
+        {/* برچسب نسخه برای اطمینان از آپدیت شدن کش */}
+        <p className="text-xs text-slate-500 mt-2">نسخه: v1.4 (Security Questions)</p>
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">

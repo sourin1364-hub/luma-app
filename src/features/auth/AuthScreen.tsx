@@ -213,7 +213,6 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
           <h1 className="text-5xl font-logo font-bold tracking-[0.2em]">LUMA</h1>
         </div>
         <p className="text-[#8B5CF6] font-medium">به دنیای درون خود خوش آمدید</p>
-        {/* برچسب نسخه برای اطمینان از آپدیت شدن کش */}
         <p className="text-xs text-slate-500 mt-2">نسخه: v1.4 (Security Questions)</p>
       </motion.div>
 
