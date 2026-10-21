@@ -118,3 +118,18 @@
     box-shadow: 0 0 15px rgba(214, 181, 109, 0.2);
   }
 }
+/* استایل دکمه‌های محاسبه و اکشن‌های اصلی */
+.btn-calculate {
+  background: linear-gradient(135deg, #D6B56D 0%, #B89546 100%) !important;
+  color: #0B0D1A !important;
+  font-family: 'IRANYekan', sans-serif !important;
+  font-weight: 700 !important;
+  border: 1px solid #D6B56D !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 0 20px rgba(214, 181, 109, 0.4) !important;
+  transition: all 0.3s ease !important;
+}
+.btn-calculate:hover {
+  box-shadow: 0 0 30px rgba(214, 181, 109, 0.7) !important;
+  transform: translateY(-2px);
+}
