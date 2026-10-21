@@ -44,13 +44,11 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // حالت‌های جدید برای بازیابی رمز
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
-    // بررسی اینکه آیا کاربر از طریق لینک ایمیل بازیابی وارد شده است یا خیر
     if (window.location.hash.includes("type=recovery")) {
       setIsRecoveryMode(true);
     }
@@ -149,7 +147,6 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
     setConfirmPassword("");
   };
 
-  // صفحه تغییر رمز عبور (وقتی کاربر روی لینک ایمیل کلیک کرده است)
   if (isRecoveryMode) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200 bg-[#0B0D1A]" dir="rtl">
@@ -180,7 +177,6 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
     );
   }
 
-  // صفحه فراموشی رمز عبور
   if (isForgotPassword) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200 bg-[#0B0D1A]" dir="rtl">
@@ -214,7 +210,6 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
     );
   }
 
-  // صفحه ورود/ثبت‌نام اصلی
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200 bg-[#0B0D1A]" dir="rtl">
       {isUpgrade && (
@@ -226,6 +221,8 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
           <h1 className="text-5xl font-logo font-bold tracking-[0.2em]">LUMA</h1>
         </div>
         <p className="text-[#8B5CF6] font-medium">به دنیای درون خود خوش آمدید</p>
+        {/* این خط برای تست است تا مطمئن شویم نسخه جدید لود شده است */}
+        <p className="text-xs text-slate-500 mt-2">نسخه: v1.3 (Password Recovery)</p>
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
