@@ -1,69 +1,22 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import * as jalaali from "jalaali-js";
-import { ChevronDown } from "lucide-react";
 
 const MONTHS = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
 const enToFa = (str: string | number) => String(str).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
-const faToEn = (str: string) => str.replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
 
-export function PersianDateInput({ value, onChange }: { value: { year: number, month: number, day: number }, onChange: (val: { year: number, month: number, day: number }) => void }) {
-  const [yearStr, setYearStr] = useState(enToFa(value.year));
-  const [month, setMonth] = useState(value.month);
-  const [day, setDay] = useState(value.day);
-
-  const getDaysInMonth = (y: number, m: number) => {
-    if (m <= 6) return 31;
-    if (m <= 11) return 30;
-    return jalaali.isLeapJalaaliYear(y) ? 30 : 29;
-  };
-
-  const enYear = Number(faToEn(yearStr)) || 1360;
-  const maxDays = getDaysInMonth(enYear, month);
-
-  useEffect(() => {
-    if (day > maxDays) {
-      setDay(maxDays);
-      onChange({ year: enYear, month, day: maxDays });
-    }
-  }, [month, maxDays, day, enYear, onChange]);
-
-  const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = enToFa(e.target.value).slice(0, 4);
-    setYearStr(val);
-    const enVal = Number(faToEn(val));
-    if (enVal > 1200 && enVal < 1500) onChange({ year: enVal, month, day });
-  };
-
-  return (
-    <div className="space-y-2">
-      <div className="grid grid-cols-3 gap-2">
-        <div className="relative">
-          <input value={yearStr} onChange={handleYearChange} placeholder="۱۳۷۰" className="lux-input w-full text-center" />
-        </div>
-        <div className="relative">
-          <select value={month} onChange={(e) => { setMonth(Number(e.target.value)); onChange({ year: enYear, month: Number(e.target.value), day }); }} className="lux-select w-full">
-            {MONTHS.map((m, i) => <option key={i+1} value={i+1}>{m}</option>)}
-          </select>
-          <ChevronDown className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-[#D6B56D] pointer-events-none" />
-        </div>
-        <div className="relative">
-          <select value={day} onChange={(e) => { setDay(Number(e.target.value)); onChange({ year: enYear, month, day: Number(e.target.value) }); }} className="lux-select w-full">
-            {Array.from({ length: maxDays }, (_, i) => i + 1).map(d => <option key={d} value={d}>{enToFa(d)}</option>)}
-          </select>
-          <ChevronDown className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-[#D6B56D] pointer-events-none" />
-        </div>
-      </div>
-      {enYear > 1200 && (
-        <p className="text-center text-xs text-[rgb(var(--glow-color-rgb))] font-bold mt-1">
-          {enToFa(day)} {MONTHS[month - 1]} {enToFa(enYear)}
-        </p>
-      )}
-    </div>
-  );
-}
-
-const ModernPicker = ({ items, value, onChange, label }: { items: number[], value: number, onChange: (v: number) => void, label: string }) => {
+// کامپوننت مشترک اسلایدر
+const ScrollPicker = <T extends string | number>({ items, value, onChange, label, format }: { items: T[], value: T, onChange: (v: T) => void, label: string, format: (v: T) => string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // اسکرول به آیتم انتخاب شده در زمان لود اولیه
+  useEffect(() => {
+    if (containerRef.current) {
+      const index = items.indexOf(value);
+      if (index !== -1) {
+        containerRef.current.scrollTop = index * 40;
+      }
+    }
+  }, []); // فقط یک بار در ابتدا اجرا شود
 
   const handleScroll = () => {
     if (!containerRef.current) return;
@@ -84,7 +37,7 @@ const ModernPicker = ({ items, value, onChange, label }: { items: number[], valu
         <div ref={containerRef} onScroll={handleScroll} className="picker-container py-[40px]">
           {items.map(item => (
             <div
-              key={item}
+              key={String(item)}
               onClick={() => {
                 onChange(item);
                 if (containerRef.current) {
@@ -93,7 +46,7 @@ const ModernPicker = ({ items, value, onChange, label }: { items: number[], valu
               }}
               className={`picker-item ${value === item ? 'selected' : ''}`}
             >
-              {enToFa(String(item).padStart(2, '0'))}
+              {format(item)}
             </div>
           ))}
         </div>
@@ -102,11 +55,41 @@ const ModernPicker = ({ items, value, onChange, label }: { items: number[], valu
   );
 };
 
-export function PersianTimeInput({ value, onChange }: { value: { hour: number, minute: number }, onChange: (val: { hour: number, minute: number }) => void }) {
+export function PersianDateInput({ value, onChange }: { value: { year: number, month: number, day: number }, onChange: (val: { year: number, month: number, day: number }) => void }) {
+  const getDaysInMonth = (y: number, m: number) => {
+    if (m <= 6) return 31;
+    if (m <= 11) return 30;
+    return jalaali.isLeapJalaaliYear(y) ? 30 : 29;
+  };
+
+  const maxDays = getDaysInMonth(value.year, value.month);
+
+  useEffect(() => {
+    if (value.day > maxDays) {
+      onChange({ ...value, day: maxDays });
+    }
+  }, [value.month, value.year, maxDays, value.day, onChange]);
+
+  const years = Array.from({ length: 150 }, (_, i) => 1300 + i); // از ۱۳۰۰ تا ۱۴۵۰
+  const days = Array.from({ length: maxDays }, (_, i) => i + 1);
+
   return (
-    <div className="flex justify-center gap-4 mt-2">
-      <ModernPicker items={Array.from({ length: 24 }, (_, i) => i)} value={value.hour} onChange={(v) => onChange({ ...value, hour: v })} label="ساعت" />
-      <ModernPicker items={Array.from({ length: 60 }, (_, i) => i)} value={value.minute} onChange={(v) => onChange({ ...value, minute: v })} label="دقیقه" />
+    <div className="flex justify-center gap-2 mt-2" dir="rtl">
+      <ScrollPicker items={days} value={value.day} onChange={(v) => onChange({ ...value, day: v })} label="روز" format={(v) => enToFa(String(v).padStart(2, '0'))} />
+      <ScrollPicker items={MONTHS} value={MONTHS[value.month - 1]} onChange={(v) => onChange({ ...value, month: MONTHS.indexOf(v) + 1 })} label="ماه" format={(v) => v} />
+      <ScrollPicker items={years} value={value.year} onChange={(v) => onChange({ ...value, year: v })} label="سال" format={(v) => enToFa(v)} />
+    </div>
+  );
+}
+
+export function PersianTimeInput({ value, onChange }: { value: { hour: number, minute: number }, onChange: (val: { hour: number, minute: number }) => void }) {
+  const hours = Array.from({ length: 24 }, (_, i) => i);
+  const minutes = Array.from({ length: 60 }, (_, i) => i);
+
+  return (
+    <div className="flex justify-center gap-4 mt-2" dir="rtl">
+      <ScrollPicker items={hours} value={value.hour} onChange={(v) => onChange({ ...value, hour: v })} label="ساعت" format={(v) => enToFa(String(v).padStart(2, '0'))} />
+      <ScrollPicker items={minutes} value={value.minute} onChange={(v) => onChange({ ...value, minute: v })} label="دقیقه" format={(v) => enToFa(String(v).padStart(2, '0'))} />
     </div>
   );
 }
