@@ -1,31 +1,33 @@
-import { db } from "../db";
-import { tarotCards, type TarotCard } from "./tarotData";
+import { supabase } from './supabase';
+import { tarotCards } from './tarotData';
+import { db } from '../db';
 
-export async function getOrCreateDailyCard(userId: number): Promise<{ card: TarotCard; isNew: boolean }> {
-  if (!tarotCards || tarotCards.length === 0) {
-    throw new Error("داده‌های کارت‌های تاروت (tarotCards) خالی است!");
-  }
-
+export async function getOrCreateDailyCard(userId: string | number) {
+  if (typeof userId !== 'string') throw new Error("User must be logged in");
   const today = new Date();
-  const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-  
-  try {
-    const existing = await db.dailyDraws.where({ userId, dateStr }).first();
+  const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+  let localDraw = await db.dailyDraws.where('[userId+dateStr]').equals([userId, dateStr]).first();
+
+  if (navigator.onLine) {
+    const { data: existing } = await supabase.from('daily_draws').select('*').eq('user_id', userId).eq('date_str', dateStr).maybeSingle();
     if (existing) {
-      const card = tarotCards.find((c) => c.id === existing.cardId);
+      const card = tarotCards.find(c => c.id === existing.card_id);
       if (card) return { card, isNew: false };
     }
-
-    const seed = userId * 13 + today.getFullYear() * 17 + (today.getMonth() + 1) * 19 + today.getDate() * 23;
-    const index = Math.abs(seed) % tarotCards.length;
-    const card = tarotCards[index];
-
-    if (!card) throw new Error("کارت تصادفی پیدا نشد!");
-
-    await db.dailyDraws.add({ userId, dateStr, cardId: card.id, createdAt: Date.now() });
-    return { card, isNew: true };
-  } catch (e: any) {
-    console.error("DB Error in getOrCreateDailyCard:", e);
-    throw new Error(e.message || "خطا در ارتباط با دیتابیس");
+  } else if (localDraw) {
+    const card = tarotCards.find(c => c.id === localDraw!.cardId);
+    if (card) return { card, isNew: false };
   }
+
+  const randomIndex = Math.floor(Math.random() * tarotCards.length);
+  const newCard = tarotCards[randomIndex];
+  const uuid = crypto.randomUUID();
+
+  await db.dailyDraws.add({ uuid, userId, dateStr, cardId: newCard.id, createdAt: Date.now(), synced: false });
+
+  if (navigator.onLine) {
+     try { await supabase.from('daily_draws').insert({ id: uuid, user_id: userId, date_str: dateStr, card_id: newCard.id, created_at: new Date().toISOString() }); } catch(e) {}
+  }
+  return { card: newCard, isNew: true };
 }

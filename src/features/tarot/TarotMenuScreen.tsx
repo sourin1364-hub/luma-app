@@ -1,64 +1,62 @@
 import { useAppStore } from "../../store/useAppStore";
 import { motion } from "framer-motion";
-import { Sparkles, BookOpen, ArrowRight, History } from "lucide-react";
+import { Sparkles, BookOpen, History } from "lucide-react";
+import { PageHeader } from "../../components/ui/PageHeader";
 
 export function TarotMenuScreen() {
   const setCurrentRoute = useAppStore((state) => state.setCurrentRoute);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden text-slate-800 dark:text-slate-200" dir="rtl">
-      <div className="w-full max-w-4xl absolute top-8 right-8 z-20">
-        <button onClick={() => setCurrentRoute("home")} className="text-sm font-bold text-[rgb(var(--glow-color-rgb))] hover:bg-[rgba(var(--glow-color-rgb),0.1)] px-4 py-2 rounded-full transition-colors flex items-center gap-2">
-          <ArrowRight className="w-4 h-4" /> بازگشت به خانه
-        </button>
-      </div>
+    <div className="min-h-screen flex flex-col items-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200 bg-[#0B0D1A]" dir="rtl">
+      <PageHeader title="دنیای تاروت" icon={<Sparkles className="w-5 h-5 text-amber-500" />} onBack={() => setCurrentRoute("home")} />
 
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12 z-10">
-        <h1 className="text-4xl font-display font-bold text-[rgb(var(--glow-color-rgb))] drop-shadow-md flex items-center justify-center gap-3 mb-4">
-          <Sparkles className="w-8 h-8 text-amber-500" />
-          دنیای تاروت
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 font-medium">به کدام بخش می‌خواهید وارد شوید؟</p>
-      </motion.div>
+      <p className="text-center text-slate-400 mb-8 font-medium">به کدام بخش می‌خواهید وارد شوید؟</p>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl relative z-10">
-        
-        {/* دکمه شروع فال */}
-        <button
+      <div className="w-full max-w-2xl flex flex-col gap-6 relative z-10">
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => setCurrentRoute("reading")}
-          className="glass-card rounded-[2.5rem] p-8 flex flex-col items-center text-center border border-white/40 dark:border-slate-700 hover:border-[rgba(var(--glow-color-rgb),0.5)] transition-all duration-300 shadow-xl group hover:-translate-y-2"
+          className="bg-[#17182B] border border-white/10 rounded-[2rem] p-6 flex flex-col items-center justify-center gap-4 shadow-xl hover:border-[#D6B56D]/50 transition-colors group"
         >
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[rgba(var(--glow-color-rgb),0.2)] to-transparent flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-            <Sparkles className="w-10 h-10 text-[rgb(var(--glow-color-rgb))] drop-shadow-[0_0_15px_rgba(var(--glow-color-rgb),0.8)]" />
+          <div className="w-20 h-20 rounded-full bg-[rgba(214,181,109,0.1)] flex items-center justify-center group-hover:bg-[rgba(214,181,109,0.2)] transition-colors">
+            <Sparkles className="w-10 h-10 text-[#D6B56D]" />
           </div>
-          <h2 className="text-xl font-bold text-[rgb(var(--glow-color-rgb))] mb-2">شروع فال جدید</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">انواع فال‌ها و دریافت پیام کائنات</p>
-        </button>
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-[#D6B56D] mb-2">شروع فال جدید</h2>
+            <p className="text-sm text-slate-400">انواع فال‌ها و دریافت پیام کائنات</p>
+          </div>
+        </motion.button>
 
-        {/* دکمه دایرةالمعارف */}
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => setCurrentRoute("tarot_library")}
-          className="glass-card rounded-[2.5rem] p-8 flex flex-col items-center text-center border border-white/40 dark:border-slate-700 hover:border-[rgba(var(--glow-color-rgb),0.5)] transition-all duration-300 shadow-xl group hover:-translate-y-2"
+          className="bg-[#17182B] border border-white/10 rounded-[2rem] p-6 flex flex-col items-center justify-center gap-4 shadow-xl hover:border-[#D6B56D]/50 transition-colors group"
         >
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[rgba(var(--glow-color-rgb),0.2)] to-transparent flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-            <BookOpen className="w-10 h-10 text-[rgb(var(--glow-color-rgb))] drop-shadow-[0_0_15px_rgba(var(--glow-color-rgb),0.8)]" />
+          <div className="w-20 h-20 rounded-full bg-[rgba(214,181,109,0.1)] flex items-center justify-center group-hover:bg-[rgba(214,181,109,0.2)] transition-colors">
+            <BookOpen className="w-10 h-10 text-[#D6B56D]" />
           </div>
-          <h2 className="text-xl font-bold text-[rgb(var(--glow-color-rgb))] mb-2">دایرةالمعارف</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">معانی کامل  کارت تاروت</p>
-        </button>
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-[#D6B56D] mb-2">دایرةالمعارف</h2>
+            <p className="text-sm text-slate-400">معانی کامل کارت تاروت</p>
+          </div>
+        </motion.button>
 
-        {/* دکمه تاریخچه */}
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => setCurrentRoute("tarot_history")}
-          className="glass-card rounded-[2.5rem] p-8 flex flex-col items-center text-center border border-white/40 dark:border-slate-700 hover:border-[rgba(var(--glow-color-rgb),0.5)] transition-all duration-300 shadow-xl group hover:-translate-y-2"
+          className="bg-[#17182B] border border-white/10 rounded-[2rem] p-6 flex flex-col items-center justify-center gap-4 shadow-xl hover:border-[#D6B56D]/50 transition-colors group"
         >
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[rgba(var(--glow-color-rgb),0.2)] to-transparent flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-            <History className="w-10 h-10 text-[rgb(var(--glow-color-rgb))] drop-shadow-[0_0_15px_rgba(var(--glow-color-rgb),0.8)]" />
+          <div className="w-20 h-20 rounded-full bg-[rgba(214,181,109,0.1)] flex items-center justify-center group-hover:bg-[rgba(214,181,109,0.2)] transition-colors">
+            <History className="w-10 h-10 text-[#D6B56D]" />
           </div>
-          <h2 className="text-xl font-bold text-[rgb(var(--glow-color-rgb))] mb-2">تاریخچه فال‌ها</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">مرور فال‌های گذشته شما</p>
-        </button>
-
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-[#D6B56D] mb-2">تاریخچه فال‌ها</h2>
+            <p className="text-sm text-slate-400">مشاهده فال‌های قبلی</p>
+          </div>
+        </motion.button>
       </div>
     </div>
   );

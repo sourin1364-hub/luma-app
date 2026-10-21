@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 interface AppState {
-  currentRoute: "home" | "chart" | "astrology" | "tarot_menu" | "tarot_library" | "tarot_history" | "reading" | "profile" | "profile_setup" | "settings" | "about";
+  currentRoute: "home" | "chart" | "astrology" | "tarot_menu" | "tarot_library" | "tarot_history" | "reading" | "profile" | "profile_setup" | "settings" | "about" | "upgrade";
   setCurrentRoute: (route: AppState["currentRoute"]) => void;
   themeMode: "light" | "dark";
   setThemeMode: (mode: "light" | "dark") => void;

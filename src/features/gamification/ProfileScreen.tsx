@@ -19,14 +19,17 @@ export function ProfileScreen() {
   const [stats, setStats] = useState<AchievementStats>({ readings: 0, dailyDraws: 0, level: 1 });
 
   useEffect(() => {
-    if (!currentUser?.id) return;
-    (async () => {
+    const loadStats = async () => {
+      if (!currentUser?.id) return;
       try {
         const r = await db.readings.where("userId").equals(currentUser.id!).count();
         const d = await db.dailyDraws.where("userId").equals(currentUser.id!).count();
         setStats({ readings: r || 0, dailyDraws: d || 0, level: levelInfo?.level || 1 });
       } catch { setStats({ readings: 0, dailyDraws: 0, level: 1 }); }
-    })();
+    };
+    loadStats();
+    window.addEventListener("focus", loadStats);
+    return () => window.removeEventListener("focus", loadStats);
   }, [currentUser?.id, levelInfo?.level]);
 
   const unlocked = getUnlocked(stats);

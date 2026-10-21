@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local environment variables
+.env.local
+
+# Secrets
+setup-env.ps1
+.env.local

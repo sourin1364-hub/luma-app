@@ -3,7 +3,7 @@ import { useAppStore } from "../../store/useAppStore";
 import { useAuthStore } from "../../store/useAuthStore";
 import { db } from "../../db";
 import { Button } from "../../components/ui/button";
-import { Download, Upload, Trash2, ArrowRight, Settings as SettingsIcon, LogOut, Sun, Moon, Volume2, VolumeX, Info } from "lucide-react";
+import { Download, Upload, Trash2, ArrowRight, Settings as SettingsIcon, LogOut, Sun, Moon, Volume2, VolumeX, Info, ShieldCheck } from "lucide-react";
 
 export function SettingsScreen() {
   const setCurrentRoute = useAppStore((s) => s.setCurrentRoute);
@@ -146,6 +146,26 @@ export function SettingsScreen() {
           </Button>
         </div>
       </div>
+
+      {currentUser?.isGuest && (
+        <div className="glow-card rounded-2xl w-full border border-[#D6B56D]/50 shadow-[0_0_15px_rgba(214,181,109,0.2)]">
+          <div className="glow-card-inner p-6 flex flex-col gap-4">
+            <h2 className="text-[#D6B56D] font-bold mb-2 flex items-center gap-2">
+               <ShieldCheck className="w-5 h-5" />
+               ارتقای حساب مهمان
+            </h2>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              شما در حالت مهمان هستید. برای اینکه با پاک شدن حافظه مرورگر اطلاعات شما از بین نرود و روی ابر ذخیره شود، همین حالا ثبت‌نام کنید. تمام XP، سطح و فال‌های شما به حساب جدید منتقل می‌شود.
+            </p>
+            <Button
+              onClick={() => setCurrentRoute("upgrade")}
+              className="w-full bg-[#D6B56D] hover:bg-amber-400 text-[#0B0D1A] h-12 rounded-xl font-bold"
+            >
+              ثبت‌نام و ساخت حساب دائمی
+            </Button>
+          </div>
+        </div>
+      )}
 
       <Button onClick={logout} className="w-full bg-[rgb(var(--glow-color-rgb))] text-white h-16 rounded-full font-bold text-lg flex items-center gap-3 mt-6 hover:brightness-110 shadow-lg">
         <LogOut className="w-6 h-6" /> خروج از حساب

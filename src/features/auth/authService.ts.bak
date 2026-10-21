@@ -1,0 +1,124 @@
+import { supabase } from "../../lib/supabase";
+import { useAuthStore } from "../../store/useAuthStore";
+import { db, type User, type BirthData } from "../../db";
+
+export const GUEST_USERNAME = "guest";
+export const MIN_PASSWORD_LENGTH = 8;
+export const MIN_USERNAME_LENGTH = 3;
+
+export type AuthErrorCode =
+  | "EMPTY_FIELDS"
+  | "USERNAME_TOO_SHORT"
+  | "PASSWORD_TOO_SHORT"
+  | "USER_LIMIT"
+  | "USERNAME_TAKEN"
+  | "INVALID_CREDENTIALS"
+  | "UNKNOWN_ERROR"
+  | "INVALID_USERNAME_FORMAT";
+
+export interface AuthResult {
+  success: boolean;
+  error?: AuthErrorCode;
+  errorMessage?: string;
+  user?: User;
+}
+
+export async function registerUser(username: string, password: string): Promise<AuthResult> {
+  const trimmed = username.trim();
+  if (!trimmed || !password) return { success: false, error: "EMPTY_FIELDS" };
+  if (trimmed.length < MIN_USERNAME_LENGTH) return { success: false, error: "USERNAME_TOO_SHORT" };
+  if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) return { success: false, error: "INVALID_USERNAME_FORMAT" };
+  if (password.length < MIN_PASSWORD_LENGTH) return { success: false, error: "PASSWORD_TOO_SHORT" };
+
+  const email = `${trimmed}@gmail.com`;
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { username: trimmed } }
+  });
+
+  if (error) {
+    console.error("Supabase signUp error:", error);
+    if (error.message.includes("already registered") || error.message.includes("already exists") || error.message.includes("User already registered")) {
+      return { success: false, error: "USERNAME_TAKEN" };
+    }
+    return { success: false, error: "UNKNOWN_ERROR", errorMessage: error.message };
+  }
+
+  if (!data.user) return { success: false, error: "INVALID_CREDENTIALS" };
+
+  const user: User = {
+    id: data.user.id,
+    username: trimmed,
+    isGuest: false,
+    createdAt: new Date(data.user.created_at).getTime(),
+  };
+
+  return { success: true, user };
+}
+
+export async function loginUser(username: string, password: string): Promise<AuthResult> {
+  const trimmed = username.trim();
+  if (!trimmed || !password) return { success: false, error: "EMPTY_FIELDS" };
+  if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) return { success: false, error: "INVALID_USERNAME_FORMAT" };
+
+  const email = `${trimmed}@gmail.com`;
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    console.error("Supabase login error:", error);
+    return { success: false, error: "INVALID_CREDENTIALS", errorMessage: error.message };
+  }
+
+  if (!data.user) return { success: false, error: "INVALID_CREDENTIALS" };
+
+  const user: User = {
+    id: data.user.id,
+    username: data.user.user_metadata.username || trimmed,
+    isGuest: false,
+    createdAt: new Date(data.user.created_at).getTime(),
+  };
+
+  return { success: true, user };
+}
+
+export async function loginAsGuest(): Promise<AuthResult> {
+  const existing = await db.users.where("username").equals(GUEST_USERNAME).first();
+  if (existing) return { success: true, user: existing };
+
+  const id = await db.users.add({
+    username: GUEST_USERNAME,
+    isGuest: true,
+    createdAt: Date.now(),
+  });
+  const user = await db.users.get(id);
+  return { success: true, user };
+}
+
+export async function updateUserBirthData(userId: string | number, birthData: BirthData): Promise<void> {
+  if (typeof userId === 'string') {
+    // برای جلوگیری از تکراری شدن، رکورد قبلی را حذف و جدید را درج می‌کنیم
+    await supabase.from('birth_profiles').delete().eq('user_id', userId);
+    
+    const { error } = await supabase.from('birth_profiles').insert({
+      user_id: userId,
+      year: birthData.year,
+      month: birthData.month,
+      day: birthData.day,
+      mother_name: birthData.motherName
+    });
+    if (error) throw new Error(`Birth Profile Error: ${error.message}`);
+  } else {
+    await db.users.update(userId, { birthData });
+  }
+
+  const currentUser = useAuthStore.getState().currentUser;
+  if (currentUser && currentUser.id === userId) {
+    useAuthStore.getState().setCurrentUser({ ...currentUser, birthData });
+  }
+}

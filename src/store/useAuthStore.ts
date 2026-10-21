@@ -1,5 +1,7 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import type { User } from "../db";
+import { supabase } from "../lib/supabase";
 
 interface AuthState {
   currentUser: User | null;
@@ -7,8 +9,29 @@ interface AuthState {
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  currentUser: null,
-  setCurrentUser: (user) => set({ currentUser: user }),
-  logout: () => set({ currentUser: null }),
-}));
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      currentUser: null,
+      setCurrentUser: (user) => set({ currentUser: user }),
+      logout: () => {
+        supabase.auth.signOut();
+        set({ currentUser: null });
+      },
+    }),
+    {
+      name: "luma-auth-v2",
+      version: 1,
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        currentUser: state.currentUser
+          ? {
+              ...state.currentUser,
+              passwordHash: undefined,
+              passwordSalt: undefined,
+            }
+          : null,
+      }),
+    }
+  )
+);

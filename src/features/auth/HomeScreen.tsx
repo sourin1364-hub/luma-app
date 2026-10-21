@@ -9,6 +9,7 @@ import { TarotGalleryScreen } from "../tarot/TarotGalleryScreen";
 import { TarotReadingScreen } from "../tarot/TarotReadingScreen";
 import { TarotHistoryScreen } from "../tarot/TarotHistoryScreen";
 import { ProfileScreen } from "../gamification/ProfileScreen";
+import { AuthScreen } from "./AuthScreen";
 import { SettingsScreen } from "../settings/SettingsScreen";
 import { DashboardScreen } from "../dashboard/DashboardScreen";
 import { AboutScreen } from "../about/AboutScreen";
@@ -33,9 +34,11 @@ export function HomeScreen() {
 
   if (!currentUser) return null;
 
-  const hasValidBirthData = 
-    currentUser.birthData && 
-    typeof currentUser.birthData.year === "number" && currentUser.birthData.year > 1900;
+  // اصلاح شد: سال شمسی (مثل 1370) هم معتبر شناخته شود
+  const hasValidBirthData =
+    currentUser.birthData &&
+    typeof currentUser.birthData.year === "number" && 
+    currentUser.birthData.year > 1200;
 
   if (!hasValidBirthData && currentRoute !== "settings" && currentRoute !== "about") {
     return <ProfileSetupScreen />;
@@ -52,6 +55,7 @@ export function HomeScreen() {
   if (currentRoute === "settings") return <SettingsScreen />;
   if (currentRoute === "profile_setup") return <ProfileSetupScreen />;
   if (currentRoute === "about") return <AboutScreen />;
+  if (currentRoute === "upgrade") return <AuthScreen isUpgrade={true} />;
 
   return <DashboardScreen />;
 }

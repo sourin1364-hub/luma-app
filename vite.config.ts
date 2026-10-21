@@ -4,7 +4,6 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 export default defineConfig({
-  // 🔴 این خط برای گیت‌هاب حیاتی است (دقیقاً نام مخزن شما)
   base: '/luma-app/',
 
   plugins: [
@@ -22,34 +21,8 @@ export default defineConfig({
         'icons/icon.svg',
         'icons/icon-maskable.svg'
       ],
-      manifest: {
-        name: 'LUMA - نجوم و تاروت',
-        short_name: 'LUMA',
-        description: 'اپلیکیشن آفلاین نجوم، تاروت و خودشناسی از Lumera',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
-        display: 'standalone',
-        orientation: 'portrait',
-        scope: '/luma-app/',
-        start_url: '/luma-app/',
-        lang: 'fa',
-        dir: 'rtl',
-        categories: ['lifestyle', 'entertainment', 'education'],
-        icons: [
-          {
-            src: '/luma-app/icons/icon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
-            purpose: 'any'
-          },
-          {
-            src: '/luma-app/icons/icon-maskable.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
-            purpose: 'maskable'
-          }
-        ]
-      },
+      // از آنجا که فایل manifest را به صورت دستی در پوشه public ساختیم، این بخش را غیرفعال می‌کنیم
+      manifest: false,
       workbox: {
         globPatterns: [
           '**/*.{js,css,html,svg,png,jpg,jpeg,gif,woff,woff2,ttf,eot,mp3}'
@@ -61,7 +34,6 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      // استفاده از import.meta.dirname برای رفع هشدار Vite
       '@': path.resolve(import.meta.dirname, './src')
     }
   }

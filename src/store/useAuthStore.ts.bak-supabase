@@ -1,0 +1,33 @@
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import type { User } from "../db";
+
+interface AuthState {
+  currentUser: User | null;
+  setCurrentUser: (user: User | null) => void;
+  logout: () => void;
+}
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      currentUser: null,
+      setCurrentUser: (user) => set({ currentUser: user }),
+      logout: () => set({ currentUser: null }),
+    }),
+    {
+      name: "luma-auth",
+      version: 1,
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        currentUser: state.currentUser
+          ? {
+              ...state.currentUser,
+              passwordHash: undefined,
+              passwordSalt: undefined,
+            }
+          : null,
+      }),
+    }
+  )
+);

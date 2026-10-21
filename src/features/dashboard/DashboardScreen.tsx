@@ -20,8 +20,14 @@ export function DashboardScreen() {
   const [showDailyModal, setShowDailyModal] = useState(false);
 
   useEffect(() => {
-    if (!currentUser?.id) return;
-    db.readings.where("userId").equals(currentUser.id).count().then(c => setReadingsCount(c || 0));
+    const fetchCount = () => {
+      if (currentUser?.id) {
+        db.readings.where("userId").equals(currentUser.id).count().then(c => setReadingsCount(c || 0));
+      }
+    };
+    fetchCount();
+    window.addEventListener("focus", fetchCount);
+    return () => window.removeEventListener("focus", fetchCount);
   }, [currentUser?.id]);
 
   if (!currentUser) return null;

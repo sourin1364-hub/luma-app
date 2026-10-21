@@ -1,8 +1,8 @@
 import { useState } from "react";
-import * as jalaali from "jalaali-js";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useAppStore } from "../../store/useAppStore";
-import { db } from "../../db";
+import { updateUserBirthData } from "../auth/authService";
+import { supabase } from "../../lib/supabase";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
@@ -10,108 +10,128 @@ import { motion } from "framer-motion";
 
 export function ProfileSetupScreen() {
   const currentUser = useAuthStore((s) => s.currentUser);
-  const setCurrentUser = useAuthStore((s) => s.setCurrentUser);
-  const setCurrentRoute = useAppStore((s) => s.setCurrentRoute);
+  const language = useAppStore((s) => s.language);
+  const isFa = language === "fa";
 
-  const [year, setYear] = useState(currentUser?.birthData?.year?.toString() || "");
-  const [month, setMonth] = useState(currentUser?.birthData?.month?.toString() || "");
-  const [day, setDay] = useState(currentUser?.birthData?.day?.toString() || "");
-  const [motherName, setMotherName] = useState(currentUser?.birthData?.motherName || "");
+  const [displayName, setDisplayName] = useState("");
+  const [year, setYear] = useState("");
+  const [month, setMonth] = useState("");
+  const [day, setDay] = useState("");
+  const [motherName, setMotherName] = useState("");
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    let y = parseInt(year, 10);
-    let m = parseInt(month, 10);
-    let d = parseInt(day, 10);
-
-    if (isNaN(y) || isNaN(m) || isNaN(d)) {
-      setError("لطفاً تاریخ را کامل و با اعداد وارد کنید");
+    if (!displayName.trim() || !year || !month || !day || !motherName.trim()) {
+      setError(isFa ? "لطفاً همه فیلدها را پر کنید" : "Please fill all fields");
       return;
     }
 
-    if (m < 1 || m > 12 || d < 1 || d > 31) {
-      setError("ماه یا روز نامعتبر است");
+    if (!currentUser || currentUser.id === undefined) {
+      setError(isFa ? "خطای شناسایی کاربر" : "User identification error");
       return;
     }
+
+    setLoading(true);
+    console.log("Saving profile and birth data...");
 
     try {
-      let finalY = y, finalM = m, finalD = d;
+      // فقط اگر کاربر آنلاین (آیدی رشته‌ای/UUID) باشد در Supabase ذخیره می‌کنیم
+      if (typeof currentUser.id === 'string') {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({ 
+            id: currentUser.id, 
+            display_name: displayName.trim(),
+            username: currentUser.username
+          });
 
-      // تبدیل تاریخ شمسی به میلادی برای ذخیره در دیتابیس
-      if (y > 1200 && y < 1500) {
-        const g = jalaali.toGregorian(y, m, d);
-        finalY = g.gy;
-        finalM = g.gm;
-        finalD = g.gd;
-      } else if (y < 1900 || y > 2100) {
-        setError("لطفاً یک سال شمسی معتبر وارد کنید (مثلاً )");
-        return;
+        if (profileError) throw new Error(`Profiles: ${profileError.message}`);
       }
 
-      if (!currentUser?.id) {
-        setError("کاربر یافت نشد");
-        return;
-      }
+      const newBirthData = {
+        year: Number(year),
+        month: Number(month),
+        day: Number(day),
+        motherName: motherName.trim(),
+      };
 
-      setLoading(true);
-      const newBirthData = { year: finalY, month: finalM, day: finalD, motherName };
+      // این تابع در authService.ts خودش می‌داند برای مهمان در Dexie و برای کاربر ابری در Supabase ذخیره کند
+      await updateUserBirthData(currentUser.id, newBirthData);
 
-      await db.users.update(currentUser.id, { birthData: newBirthData });
-      const updatedUser = await db.users.get(currentUser.id);
-      if (updatedUser) setCurrentUser(updatedUser);
-      setCurrentRoute("home");
-      
-    } catch (err) {
+      useAuthStore.getState().setCurrentUser({
+        ...currentUser,
+        birthData: newBirthData
+      });
+
+      console.log("Successfully updated store. React should now render HomeScreen.");
+
+    } catch (err: any) {
       console.error(err);
-      setError("خطا در ذخیره اطلاعات");
-    } finally {
+      setError(isFa ? `خطا: ${err.message}` : `Error: ${err.message}`);
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden text-slate-800" dir="rtl">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden text-slate-800 bg-[#0B0D1A]" dir={isFa ? "rtl" : "ltr"}>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-        <div className="glow-card rounded-[2rem] w-full shadow-xl">
-          <div className="glow-card-inner rounded-[2rem] p-8">
-            <h1 className="text-2xl font-bold text-center text-blue-900 mb-6 font-display">
-              اطلاعات تولد شما
-            </h1>
-            <p className="text-center text-sm text-slate-500 mb-6">
-              برای محاسبه دقیق چارت، لطفاً تاریخ تولد خود را وارد کنید.
-            </p>
+        <div className="bg-[#17182B] border border-[#8B5CF6]/30 rounded-[2rem] p-8 shadow-2xl">
+          <h2 className="text-2xl font-bold text-center text-[#D6B56D] mb-2">
+            {isFa ? "تکمیل پروفایل" : "Complete Profile"}
+          </h2>
+          <p className="text-center text-slate-400 text-sm mb-6">
+            {isFa ? "برای شخصی‌سازی چارت نجومی، لطفاً اطلاعات خود را وارد کنید" : "Enter your details to personalize your birth chart"}
+          </p>
 
-            <form onSubmit={handleSave} className="space-y-4">
-              <div className="grid grid-cols-3 gap-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="year">سال</Label>
-                  <Input id="year" type="number" value={year} onChange={(e) => setYear(e.target.value)} placeholder="" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="month">ماه</Label>
-                  <Input id="month" type="number" value={month} onChange={(e) => setMonth(e.target.value)} placeholder="" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="day">روز</Label>
-                  <Input id="day" type="number" value={day} onChange={(e) => setDay(e.target.value)} placeholder="" />
-                </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-slate-300">{isFa ? "نام و نام خانوادگی (نمایشی)" : "Display Name"}</Label>
+              <Input 
+                value={displayName} 
+                onChange={(e) => setDisplayName(e.target.value)} 
+                placeholder={isFa ? "مثلاً: آریان کاملایی" : "e.g., John Doe"} 
+                className="bg-[#0B0D1A] border-slate-700 text-white"
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1.5">
+                <Label className="text-slate-300">{isFa ? "سال" : "Year"}</Label>
+                <Input type="number" value={year} onChange={(e) => setYear(e.target.value)} placeholder="1370" className="bg-[#0B0D1A] border-slate-700 text-white text-center" />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="motherName">نام مادر (برای ابجد)</Label>
-                <Input id="motherName" value={motherName} onChange={(e) => setMotherName(e.target.value)} placeholder="نام مادر" />
+                <Label className="text-slate-300">{isFa ? "ماه" : "Month"}</Label>
+                <Input type="number" value={month} onChange={(e) => setMonth(e.target.value)} placeholder="1" className="bg-[#0B0D1A] border-slate-700 text-white text-center" />
               </div>
+              <div className="space-y-1.5">
+                <Label className="text-slate-300">{isFa ? "روز" : "Day"}</Label>
+                <Input type="number" value={day} onChange={(e) => setDay(e.target.value)} placeholder="1" className="bg-[#0B0D1A] border-slate-700 text-white text-center" />
+              </div>
+            </div>
 
-              {error && <p className="text-red-500 text-xs font-medium text-center">{error}</p>}
+            <div className="space-y-1.5">
+              <Label className="text-slate-300">{isFa ? "نام مادر" : "Mother's Name"}</Label>
+              <Input 
+                value={motherName} 
+                onChange={(e) => setMotherName(e.target.value)} 
+                placeholder={isFa ? "برای محاسبات عددی و تاروت" : "For numerology and tarot"} 
+                className="bg-[#0B0D1A] border-slate-700 text-white"
+              />
+            </div>
 
-              <Button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 rounded-xl mt-4">
-                {loading ? "..." : "ذخیره و ادامه"}
-              </Button>
-            </form>
-          </div>
+            {error && (
+              <p className="text-red-400 text-xs font-medium text-center bg-red-900/20 p-2 rounded-lg leading-relaxed">{error}</p>
+            )}
+
+            <Button type="submit" disabled={loading} className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white h-12 rounded-xl mt-6">
+              {loading ? "در حال ذخیره..." : (isFa ? "ذخیره و ورود به برنامه" : "Save & Enter App")}
+            </Button>
+          </form>
         </div>
       </motion.div>
     </div>

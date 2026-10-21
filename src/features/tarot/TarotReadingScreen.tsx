@@ -3,11 +3,13 @@ import { useAppStore } from "../../store/useAppStore";
 import { useAuthStore } from "../../store/useAuthStore";
 import { tarotCards, type TarotCard } from "../../lib/tarotData";
 import { getCardMeaning } from "../../lib/tarotMeanings";
-import { db } from "../../db";
+import { generateTarotSynthesis } from "../../lib/tarotAnalysis";
+import { saveReadingOfflineFirst } from "../../lib/sync";
 import { useGamification } from "../gamification/useGamification";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ArrowRight, Heart, Split, Layers, HelpCircle } from "lucide-react";
+import { Sparkles, Heart, Split, Layers, HelpCircle } from "lucide-react";
+import { PageHeader } from "../../components/ui/PageHeader";
 
 const images = import.meta.glob('../../assets/cards/*.jpg', { eager: true, import: 'default' }) as Record<string, string>;
 
@@ -50,32 +52,35 @@ const MagicSparkles = ({ show }: { show: boolean }) => {
 };
 
 const ShuffleAnimation = () => {
-  const cards = [...Array(8)].map((_, i) => i);
   return (
-    <div className="relative w-56 h-96 flex items-center justify-center">
-      {cards.map((i) => (
-        <motion.div
-          key={i}
-          className="absolute w-48 h-80 rounded-xl overflow-hidden border-[2px] shadow-2xl"
-          style={{ borderColor: "rgba(var(--glow-color-rgb), 0.8)" }}
-          initial={{ x: 0, y: 0, rotate: 0, opacity: 0 }}
-          animate={{
-            x: [0, (Math.random() - 0.5) * 180, (Math.random() - 0.5) * 180, 0],
-            y: [0, (Math.random() - 0.5) * 180, (Math.random() - 0.5) * 180, 0],
-            rotate: [0, (Math.random() - 0.5) * 120, (Math.random() - 0.5) * 120, 0],
-            opacity: 1
-          }}
-          transition={{ 
-            duration: 0.8, 
-            repeat: Infinity, 
-            repeatType: "reverse", 
-            ease: "easeInOut", 
-            delay: i * 0.1 
-          }}
-        >
-          <img src={images['../../assets/cards/back.jpg']} alt="Back" className="w-full h-full object-cover" />
-        </motion.div>
-      ))}
+    <div className="relative w-full max-w-lg h-[350px] flex items-center justify-center">
+      <div className="flex gap-4 md:gap-8">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="w-24 h-36 md:w-32 md:h-48 rounded-xl border-2 border-amber-500/30 bg-[#0B0D1A] relative shadow-inner">
+             <img src={images['../../assets/cards/back.jpg']} alt="Back" className="w-full h-full object-cover rounded-xl opacity-30" />
+          </div>
+        ))}
+      </div>
+
+      {[...Array(12)].map((_, i) => {
+        const pileIndex = i % 3;
+        const xOffset = pileIndex === 0 ? -110 : pileIndex === 2 ? 110 : 0;
+        const yOffset = Math.floor(i / 3) * -2;
+        const rotation = (Math.random() - 0.5) * 30;
+
+        return (
+          <motion.div
+            key={i}
+            className="absolute w-24 h-36 md:w-32 md:h-48 rounded-xl border-[2px] shadow-2xl overflow-hidden"
+            style={{ borderColor: "rgba(var(--glow-color-rgb), 0.8)" }}
+            initial={{ x: 0, y: -150, rotate: 0, opacity: 0, scale: 0.8 }}
+            animate={{ x: xOffset, y: yOffset, rotate: rotation, opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: i * 0.1, ease: "easeOut" }}
+          >
+            <img src={images['../../assets/cards/back.jpg']} alt="Back" className="w-full h-full object-cover" />
+          </motion.div>
+        );
+      })}
     </div>
   );
 };
@@ -83,39 +88,6 @@ const ShuffleAnimation = () => {
 interface DrawnCardState {
   card: TarotCard;
   isReversed: boolean;
-}
-
-function generateLumaAdvice(drawnCards: DrawnCardState[], spreadType: SpreadType): string {
-  if (drawnCards.length === 0) return "";
-  const majorCount = drawnCards.filter(d => d.card.isMajor).length;
-  const reversedCount = drawnCards.filter(d => d.isReversed).length;
-  let adviceParts: string[] = [];
-
-  if (spreadType === "single") adviceParts.push("لوما می‌گوید: این کارت پاسخ کائنات به سوال شماست. ");
-  else if (spreadType === "past_present_future") adviceParts.push("لوما با بررسی مسیر زمان، این پیام را برایتان دارد: ");
-  else if (spreadType === "love") adviceParts.push("لوما با تمرکز بر انرژی‌های عاطفی شما می‌گوید: ");
-  else if (spreadType === "choice") adviceParts.push("لوما با تحلیل دو مسیر پیش روی شما می‌گوید: ");
-
-  if (majorCount >= 2) adviceParts.push("حضور پررنگ کارت‌های کبیر نشان می‌دهد که این فال تحت تأثیر نیروهای کارمیک و سرنوشت‌ساز است. ");
-  if (reversedCount > 0) adviceParts.push(`وجود ${reversedCount} کارت معکوس نشان می‌دهد که برخی انرژی‌ها در درون شما مسدود شده‌اند. `);
-  else adviceParts.push("همه کارت‌ها در حالت راست قرار دارند. انرژی‌ها در جریان هستند. ");
-
-  if (spreadType === "love") {
-    const partnerCard = drawnCards[1];
-    if (partnerCard.isReversed) adviceParts.push("کارت شریک عاطفی معکوس است؛ نشان می‌دهد که او ممکن است در بیان احساسات خود تردید داشته باشد. ");
-    else adviceParts.push("کارت شریک عاطفی در حالت راست است؛ نشان‌دهنده پذیرش و هماهنگی نسبی است. ");
-  }
-
-  if (spreadType === "choice" && drawnCards.length === 5) {
-    const path1 = drawnCards[1].card.isMajor || drawnCards[2].card.isMajor;
-    const path2 = drawnCards[3].card.isMajor || drawnCards[4].card.isMajor;
-    if (path1 && !path2) adviceParts.push("به نظر می‌رسد مسیر اول انرژی قوی‌تری دارد و مورد تایید کائنات است. ");
-    else if (path2 && !path1) adviceParts.push("مسیر دوم انرژی قوی‌تری دارد و آینده بهتری را نوید می‌دهد. ");
-    else adviceParts.push("هر دو مسیر انرژی‌های خاص خود را دارند. به ندای قلب خود گوش دهید. ");
-  }
-
-  adviceParts.push("توصیه نهایی لوما: به شهود خود اعتماد کنید و با آگاهی قدم بعدی را بردارید.");
-  return adviceParts.join(" ");
 }
 
 export function TarotReadingScreen() {
@@ -148,7 +120,7 @@ export function TarotReadingScreen() {
     playShuffle();
 
     setRevealed(new Array(activeSpreadConfig.count).fill(false));
-    setDrawnCards([]); 
+    setDrawnCards([]);
     readingKeyRef.current = Date.now();
 
     setTimeout(() => {
@@ -156,7 +128,7 @@ export function TarotReadingScreen() {
         .map(c => ({ card: c, isReversed: Math.random() < 0.3 }))
         .sort(() => 0.5 - Math.random())
         .slice(0, activeSpreadConfig.count);
-      
+
       setDrawnCards(shuffled);
       setIsShuffling(false);
     }, 4000);
@@ -186,17 +158,14 @@ export function TarotReadingScreen() {
 
     void (async () => {
       try {
-        // تولید و ذخیره تفسیر در دیتابیس
-        const adviceText = generateLumaAdvice(drawnCards, selectedSpread!);
-        
-        await db.readings.add({ 
-          userId: currentUser.id!, 
-          type: selectedSpread || "unknown", 
-          cards: drawnCards.map((d) => d.card.id), 
-          interpretation: adviceText, // <-- تفسیر اینجا ذخیره می‌شود
-          createdAt: Date.now() 
-        });
-        
+        const adviceText = generateTarotSynthesis(drawnCards, selectedSpread!);
+        await saveReadingOfflineFirst(
+          currentUser.id!.toString(),
+          selectedSpread || "unknown",
+          drawnCards.map((d) => d.card.id),
+          adviceText
+        );
+
         playMagic();
         setShowXp(true);
         playXp();
@@ -215,33 +184,24 @@ export function TarotReadingScreen() {
 
   if (!selectedSpread) {
     return (
-      <div className="min-h-screen flex flex-col items-center p-6 relative overflow-hidden text-slate-800 dark:text-slate-200" dir="rtl">
-        <div className="w-full max-w-4xl flex justify-between items-center mb-12 relative z-10">
-          <button onClick={() => setCurrentRoute("tarot_menu")} className="text-sm font-bold text-[rgb(var(--glow-color-rgb))] hover:bg-[rgba(var(--glow-color-rgb),0.1)] px-4 py-2 rounded-full transition-colors flex items-center gap-2">
-            <ArrowRight className="w-4 h-4" /> بازگشت
-          </button>
-          <h1 className="text-3xl font-display font-bold text-[rgb(var(--glow-color-rgb))] drop-shadow-md flex items-center gap-3">
-            <Sparkles className="w-6 h-6 text-amber-500" />
-            انتخاب نوع فال
-          </h1>
-          <div className="w-24"></div>
-        </div>
+      <div className="min-h-screen flex flex-col items-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200" dir="rtl">
+        <PageHeader title="انتخاب نوع فال" icon={<Sparkles className="w-5 h-5 text-amber-500" />} onBack={() => setCurrentRoute("tarot_menu")} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full max-w-4xl relative z-10">
           {SPREADS.map((spread) => (
             <motion.button
               key={spread.id}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setSelectedSpread(spread.id as SpreadType)}
-              className="glass-card rounded-3xl p-6 flex items-center gap-4 border border-white/40 dark:border-slate-700 hover:border-[rgba(var(--glow-color-rgb),0.5)] transition-colors text-right shadow-lg"
+              className="glass-card rounded-3xl p-4 sm:p-6 flex items-center gap-4 border border-white/10 hover:border-[rgba(var(--glow-color-rgb),0.5)] transition-colors text-right shadow-lg"
             >
-              <div className="w-16 h-16 rounded-2xl bg-[rgba(var(--glow-color-rgb),0.1)] flex items-center justify-center shrink-0">
-                <spread.icon className="w-8 h-8 text-[rgb(var(--glow-color-rgb))]" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-[rgba(var(--glow-color-rgb),0.1)] flex items-center justify-center shrink-0">
+                <spread.icon className="w-6 h-6 sm:w-8 sm:h-8 text-[rgb(var(--glow-color-rgb))]" />
               </div>
               <div>
-                <h3 className="font-bold text-[rgb(var(--glow-color-rgb))] text-xl mb-1">{spread.title}</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{spread.desc}</p>
+                <h3 className="font-bold text-[rgb(var(--glow-color-rgb))] text-lg sm:text-xl mb-1">{spread.title}</h3>
+                <p className="text-xs sm:text-sm text-slate-400">{spread.desc}</p>
               </div>
             </motion.button>
           ))}
@@ -251,53 +211,43 @@ export function TarotReadingScreen() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-6 relative overflow-hidden text-slate-800 dark:text-slate-200" dir="rtl">
-      
-      <div className="w-full max-w-5xl flex justify-between items-center mb-8 relative z-10">
-        <button onClick={() => { setSelectedSpread(null); setDrawnCards([]); setRevealed([]); }} className="text-sm font-bold text-[rgb(var(--glow-color-rgb))] hover:bg-[rgba(var(--glow-color-rgb),0.1)] px-4 py-2 rounded-full transition-colors flex items-center gap-2">
-          <ArrowRight className="w-4 h-4" /> تغییر نوع فال
-        </button>
-        <h1 className="text-2xl font-display font-bold text-[rgb(var(--glow-color-rgb))] drop-shadow-md flex items-center gap-3">
-          <Sparkles className="w-5 h-5 text-amber-500" />
-          {activeSpreadConfig?.title}
-        </h1>
-        <div className="w-24"></div>
-      </div>
+    <div className="min-h-screen flex flex-col items-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200" dir="rtl">
+      <PageHeader title={activeSpreadConfig?.title || ""} icon={<Sparkles className="w-5 h-5 text-amber-500" />} onBack={() => { setSelectedSpread(null); setDrawnCards([]); setRevealed([]); }} />
 
       {drawnCards.length === 0 && !isShuffling ? (
         <div className="flex-1 flex flex-col items-center justify-center space-y-12 relative z-10 mt-10">
-          <motion.div 
-            animate={{ rotateY: [0, 180, 360], y: [0, -10, 0] }} 
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} 
-            className="w-56 h-96 rounded-xl overflow-hidden border-[3px] transition-all duration-300"
+          <motion.div
+            animate={{ rotateY: [0, 180, 360], y: [0, -10, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            className="w-48 h-72 sm:w-56 sm:h-96 rounded-xl overflow-hidden border-[3px] transition-all duration-300"
             style={cardBorderStyle}
           >
             <img src={images['../../assets/cards/back.jpg']} alt="Back" className="w-full h-full object-cover" />
           </motion.div>
-          
+
           <button onClick={startReading} className="glow-btn w-full max-w-xs h-16 transition-transform hover:scale-[1.02] active:scale-95 group shadow-lg">
-            <div className="glow-btn-inner w-full h-full flex items-center justify-center gap-2 text-lg font-bold tracking-widest text-white group-hover:text-yellow-300 transition-colors">
+            <div className="glow-btn-inner w-full h-full flex items-center justify-center gap-2 text-lg font-bold tracking-widest text-[#0B0D1A] group-hover:text-amber-900 transition-colors">
               <Sparkles className="w-5 h-5" />
               شروع فال
             </div>
           </button>
         </div>
       ) : isShuffling ? (
-        <div className="flex-1 flex flex-col items-center justify-center space-y-12 relative z-10 mt-10">
+        <div className="flex-1 flex flex-col items-center justify-center space-y-12 relative z-10 mt-10 w-full px-2">
           <ShuffleAnimation />
-          <p className="text-lg font-bold text-[rgb(var(--glow-color-rgb))] animate-pulse">در حال بُر زدن کارت‌ها...</p>
+          <p className="text-lg font-bold text-[rgb(var(--glow-color-rgb))] animate-pulse">در حال بر زدن کارت‌ها...</p>
         </div>
       ) : (
         <div className="w-full max-w-6xl space-y-12 relative z-10">
-          <div className="flex flex-wrap justify-center items-end gap-4 md:gap-8 min-h-[300px]">
+          <div className="flex flex-wrap justify-center items-end gap-2 md:gap-8 min-h-[300px]">
             {drawnCards.map((drawn, index) => (
-              <div key={index} className="flex flex-col items-center space-y-4">
-                <h3 className="text-sm md:text-lg font-bold text-[rgb(var(--glow-color-rgb))] text-center w-24 md:w-32">
+              <div key={index} className="flex flex-col items-center space-y-2 sm:space-y-4">
+                <h3 className="text-xs sm:text-lg font-bold text-[rgb(var(--glow-color-rgb))] text-center w-20 md:w-32">
                   {activeSpreadConfig?.positions[index]}
                 </h3>
-                
-                <div 
-                  className="relative w-32 h-52 md:w-40 md:h-64 lg:w-44 lg:h-72 cursor-pointer group"
+
+                <div
+                  className="relative w-28 h-44 sm:w-32 sm:h-48 md:w-44 md:h-64 lg:w-52 lg:h-80 xl:w-56 xl:h-84 cursor-pointer group"
                   style={{ perspective: "1000px" }}
                   onClick={() => revealCard(index)}
                 >
@@ -308,21 +258,21 @@ export function TarotReadingScreen() {
                     animate={{ rotateY: revealed[index] ? 180 : 0 }}
                     transition={{ duration: 0.8, type: "spring", stiffness: 100, damping: 20 }}
                   >
-                    <div 
+                    <div
                       className="absolute inset-0 rounded-xl overflow-hidden border-[3px] transition-all duration-300"
                       style={{ ...cardBorderStyle, backfaceVisibility: "hidden", zIndex: 2 }}
                     >
                       <img src={images['../../assets/cards/back.jpg']} alt="Back" className="w-full h-full object-cover" />
                     </div>
 
-                    <div 
+                    <div
                       className="absolute inset-0 rounded-xl overflow-hidden border-[3px] transition-all duration-300"
                       style={{ ...cardBorderStyle, backfaceVisibility: "hidden", transform: "rotateY(180deg)", zIndex: 1 }}
                     >
-                      <img 
-                        src={images[`../../assets/cards/${drawn.card.fileName}`]} 
-                        alt={drawn.card.name} 
-                        className={`w-full h-full object-cover transition-transform duration-500 ${drawn.isReversed ? 'rotate-180' : ''}`} 
+                      <img
+                        src={images[`../../assets/cards/${drawn.card.fileName}`]}
+                        alt={drawn.card.name}
+                        className={`w-full h-full object-cover transition-transform duration-500 ${drawn.isReversed ? 'rotate-180' : ''}`}
                       />
                     </div>
                   </motion.div>
@@ -342,39 +292,39 @@ export function TarotReadingScreen() {
           <AnimatePresence>
             {allRevealed && (
               <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: "easeOut" }} className="space-y-10">
-                
-                <div className="luma-advice-card relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-50 to-white dark:from-slate-800 dark:to-slate-900 border-2 border-amber-300 dark:border-amber-500/30 shadow-[0_8px_30px_rgba(212,175,55,0.2)] p-8 text-center mt-8">
+
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#17182B] to-[#0B0D1A] border-2 border-amber-500/30 shadow-[0_8px_30px_rgba(212,175,55,0.2)] p-4 sm:p-8 text-center mt-8">
                   <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-300"></div>
-                  <h3 className="luma-advice-title text-2xl font-bold text-amber-700 dark:text-amber-400 mb-6 flex items-center justify-center gap-2">
+                  <h3 className="text-xl sm:text-2xl font-bold text-[#D6B56D] mb-6 flex items-center justify-center gap-2">
                     <Sparkles className="w-7 h-7 text-amber-500" />
                     تحلیل و توصیه کامل لوما
                   </h3>
                   <div className="min-h-[120px] flex items-center justify-center">
                     {isAnalyzing ? (
-                      <div className="flex flex-col items-center gap-3 text-amber-600 dark:text-amber-400 luma-advice-text">
+                      <div className="flex flex-col items-center gap-3 text-amber-400">
                         <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}><Sparkles className="w-8 h-8" /></motion.div>
                         <span className="font-medium animate-pulse">لوما در حال تحلیل عناصر و انرژی کارت‌هاست...</span>
                       </div>
                     ) : (
-                      <p className="luma-advice-text text-lg text-slate-700 dark:text-slate-300 leading-loose font-medium text-justify md:text-center" dir="rtl">
-                        {generateLumaAdvice(drawnCards, selectedSpread)}
-                      </p>
+                      <div className="text-sm sm:text-base text-slate-300 leading-loose font-medium text-justify text-right whitespace-pre-wrap" dir="rtl">
+                        {generateTarotSynthesis(drawnCards, selectedSpread)}
+                      </div>
                     )}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {drawnCards.map((drawn, index) => (
-                    <Card key={index} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-white/80 dark:border-slate-700 shadow-sm rounded-2xl flex flex-col">
+                    <Card key={index} className="bg-[#17182B] border-white/10 shadow-sm rounded-2xl flex flex-col">
                       <CardHeader>
-                        <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mb-1">{activeSpreadConfig?.positions[index]}</p>
-                        <CardTitle className="text-center text-lg text-[rgb(var(--glow-color-rgb))]">
+                        <p className="text-xs font-bold text-amber-500 mb-1">{activeSpreadConfig?.positions[index]}</p>
+                        <CardTitle className="text-center text-lg text-[#D6B56D]">
                           {drawn.card.nameFa} {drawn.isReversed && <span className="text-xs text-red-500">(معکوس)</span>}
                         </CardTitle>
-                        <p className="text-center text-xs text-slate-500 dark:text-slate-400 tracking-widest">{drawn.card.name}</p>
+                        <p className="text-center text-xs text-slate-400 tracking-widest">{drawn.card.name}</p>
                       </CardHeader>
                       <CardContent className="flex-1">
-                        <p className="text-sm leading-relaxed text-justify text-slate-600 dark:text-slate-300 font-medium">
+                        <p className="text-sm leading-relaxed text-justify text-slate-300 font-medium">
                           {getCardMeaning(drawn.card.id, drawn.isReversed)}
                         </p>
                       </CardContent>
@@ -384,7 +334,7 @@ export function TarotReadingScreen() {
 
                 <div className="flex justify-center pt-8 pb-10">
                   <button onClick={() => { setDrawnCards([]); setRevealed([]); }} className="glow-btn w-48 h-12 transition-transform hover:scale-[1.02] active:scale-95 group shadow-md">
-                    <div className="glow-btn-inner w-full h-full flex items-center justify-center text-sm font-bold text-white group-hover:text-yellow-300 transition-colors">
+                    <div className="glow-btn-inner w-full h-full flex items-center justify-center text-sm font-bold text-[#0B0D1A] group-hover:text-amber-900 transition-colors">
                       فال مجدد
                     </div>
                   </button>

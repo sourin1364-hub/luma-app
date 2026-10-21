@@ -283,3 +283,74 @@ html.dark .profile-stat-card {
   background-color: rgba(30, 41, 59, 0.8) !important;
   border-color: rgba(var(--glow-color-rgb), 0.2) !important;
 }
+/* =========================================================
+   LUMA LUXURY DARK THEME OVERRIDES
+   ========================================================= */
+:root {
+  --glow-color-rgb: 214, 181, 109; /* Gold default */
+}
+
+/* Force dark navy background on the entire app */
+html, body, #root {
+  background-color: #0B0D1A !important;
+  color: #F5F2FA !important;
+  min-height: 100vh;
+}
+
+/* Override bright white backgrounds to dark luxury cards */
+.glass-card,
+.bg-white,
+.bg-white\/80,
+.bg-white\/90,
+.bg-\[\#17182B\],
+.bg-slate-800\/80 {
+  background-color: #17182B !important;
+  color: #F5F2FA !important;
+  border: 1px solid rgba(214, 181, 109, 0.2) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(12px);
+}
+
+/* Force text colors to be readable on dark backgrounds */
+.text-slate-800,
+.text-slate-900,
+.text-blue-900,
+.text-slate-700 {
+  color: #F5F2FA !important;
+}
+
+.text-slate-500,
+.text-slate-600,
+.text-slate-400 {
+  color: #AAA7BD !important;
+}
+
+/* Gold accent for main titles */
+h1, h2, h3 {
+  color: #D6B56D !important;
+}
+
+/* Purple and Gold for buttons */
+.bg-blue-600,
+.bg-\[\#8B5CF6\] {
+  background-color: #8B5CF6 !important;
+  color: white !important;
+}
+
+.glow-btn-inner {
+  background: linear-gradient(135deg, #8B5CF6, #D6B56D) !important;
+  color: #0B0D1A !important;
+  font-weight: bold;
+}
+
+/* Make sure the big background waves don't stay yellow */
+.ElementBackground, .OceanWaves {
+  opacity: 0.3 !important;
+  filter: hue-rotate(240deg); /* Shift yellow to purple/navy */
+}
+
+/* Mobile Responsiveness Fix */
+html, body, #root {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
