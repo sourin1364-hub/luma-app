@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useAppStore } from "../../store/useAppStore";
@@ -46,7 +46,7 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
 
   // حالت‌های جدید برای بازیابی رمز با سوال امنیتی
   const [isForgotPassword, setIsForgotPassword] = useState(false);
-  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+
   
   // فیلدهای بازیابی
   const [recYear, setRecYear] = useState("");
@@ -55,11 +55,6 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
   const [recMotherName, setRecMotherName] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
-  useEffect(() => {
-    if (window.location.hash.includes("type=recovery")) {
-      setIsRecoveryMode(true);
-    }
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
