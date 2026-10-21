@@ -58,17 +58,17 @@ const PLANET_IN_HOUSE: Record<string, Record<number, string>> = {
 };
 
 const TAROT_MAP: Record<string, { name: string; desc: string; cardId: number; fileName: string }> = {
-  "خورشید": { name: "کارت خورشید (The Sun)", desc: "نماد موفقیت، شادی و حقیقت.", cardId: 19, fileName: "major-19.jpg" },
-  "ماه": { name: "کارت ماه (The Moon)", desc: "نماد شهود، رؤیا و ناخودآگاه.", cardId: 18, fileName: "major-18.jpg" },
-  "عطارد": { name: "کارت جادوگر (The Magician)", desc: "نماد ذهن، ارتباط و قدرت تجلی.", cardId: 1, fileName: "major-01.jpg" },
-  "زهره": { name: "کارت امپراتریس (The Empress)", desc: "نماد عشق، زیبایی و فراوانی.", cardId: 3, fileName: "major-03.jpg" },
-  "مریخ": { name: "کارت برج (The Tower)", desc: "نماد انرژی، تخریب و دگرگونی ناگهانی.", cardId: 16, fileName: "major-16.jpg" },
-  "مشتری": { name: "کارت چرخ روزگار (Wheel of Fortune)", desc: "نماد خوشبختی و شانس.", cardId: 10, fileName: "major-10.jpg" },
-  "زحل": { name: "کارت جهان (The World)", desc: "نماد درس‌ها و تکمیل چرخه.", cardId: 21, fileName: "major-21.jpg" },
-  "اورانوس": { name: "کارت احمق (The Fool)", desc: "نماد نوآوری و آزادی.", cardId: 0, fileName: "major-00.jpg" },
-  "نپتون": { name: "کارت مرد حلق‌آویز (The Hanged Man)", desc: "نماد شهود و رؤیا.", cardId: 12, fileName: "major-12.jpg" },
-  "پلوتو": { name: "کارت داوری (Judgement)", desc: "نماد دگرگونی عمیق.", cardId: 20, fileName: "major-20.jpg" },
-  "طالع": { name: "کارت جادوگر (The Magician)", desc: "نماد نقاب اجتماعی.", cardId: 1, fileName: "major-01.jpg" }
+  "خورشید": { name: "کارت خورشید (The Sun)", desc: "نماد موفقیت، شادی و حقیقت.", cardId: 19, fileName: "major-19.webp" },
+  "ماه": { name: "کارت ماه (The Moon)", desc: "نماد شهود، رؤیا و ناخودآگاه.", cardId: 18, fileName: "major-18.webp" },
+  "عطارد": { name: "کارت جادوگر (The Magician)", desc: "نماد ذهن، ارتباط و قدرت تجلی.", cardId: 1, fileName: "major-01.webp" },
+  "زهره": { name: "کارت امپراتریس (The Empress)", desc: "نماد عشق، زیبایی و فراوانی.", cardId: 3, fileName: "major-03.webp" },
+  "مریخ": { name: "کارت برج (The Tower)", desc: "نماد انرژی، تخریب و دگرگونی ناگهانی.", cardId: 16, fileName: "major-16.webp" },
+  "مشتری": { name: "کارت چرخ روزگار (Wheel of Fortune)", desc: "نماد خوشبختی و شانس.", cardId: 10, fileName: "major-10.webp" },
+  "زحل": { name: "کارت جهان (The World)", desc: "نماد درس‌ها و تکمیل چرخه.", cardId: 21, fileName: "major-21.webp" },
+  "اورانوس": { name: "کارت احمق (The Fool)", desc: "نماد نوآوری و آزادی.", cardId: 0, fileName: "major-00.webp" },
+  "نپتون": { name: "کارت مرد حلق‌آویز (The Hanged Man)", desc: "نماد شهود و رؤیا.", cardId: 12, fileName: "major-12.webp" },
+  "پلوتو": { name: "کارت داوری (Judgement)", desc: "نماد دگرگونی عمیق.", cardId: 20, fileName: "major-20.webp" },
+  "طالع": { name: "کارت جادوگر (The Magician)", desc: "نماد نقاب اجتماعی.", cardId: 1, fileName: "major-01.webp" }
 };
 
 const PLANET_ICONS: Record<string, any> = {

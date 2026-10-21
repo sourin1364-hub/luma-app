@@ -57,7 +57,7 @@ const ShuffleAnimation = () => {
       <div className="flex gap-4 md:gap-8">
         {[0, 1, 2].map((i) => (
           <div key={i} className="w-24 h-36 md:w-32 md:h-48 rounded-xl border-2 border-amber-500/30 bg-[#0B0D1A] relative shadow-inner">
-             <img src={images['../../assets/cards/back.jpg']} alt="Back" className="w-full h-full object-cover rounded-xl opacity-30" />
+             <img src={images['../../assets/cards/back.webp']} alt="Back" className="w-full h-full object-cover rounded-xl opacity-30" />
           </div>
         ))}
       </div>
@@ -77,7 +77,7 @@ const ShuffleAnimation = () => {
             animate={{ x: xOffset, y: yOffset, rotate: rotation, opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: i * 0.1, ease: "easeOut" }}
           >
-            <img src={images['../../assets/cards/back.jpg']} alt="Back" className="w-full h-full object-cover" />
+            <img src={images['../../assets/cards/back.webp']} alt="Back" className="w-full h-full object-cover" />
           </motion.div>
         );
       })}
@@ -222,7 +222,7 @@ export function TarotReadingScreen() {
             className="w-48 h-72 sm:w-56 sm:h-96 rounded-xl overflow-hidden border-[3px] transition-all duration-300"
             style={cardBorderStyle}
           >
-            <img src={images['../../assets/cards/back.jpg']} alt="Back" className="w-full h-full object-cover" />
+            <img src={images['../../assets/cards/back.webp']} alt="Back" className="w-full h-full object-cover" />
           </motion.div>
 
           <button onClick={startReading} className="glow-btn w-full max-w-xs h-16 transition-transform hover:scale-[1.02] active:scale-95 group shadow-lg">
@@ -262,7 +262,7 @@ export function TarotReadingScreen() {
                       className="absolute inset-0 rounded-xl overflow-hidden border-[3px] transition-all duration-300"
                       style={{ ...cardBorderStyle, backfaceVisibility: "hidden", zIndex: 2 }}
                     >
-                      <img src={images['../../assets/cards/back.jpg']} alt="Back" className="w-full h-full object-cover" />
+                      <img src={images['../../assets/cards/back.webp']} alt="Back" className="w-full h-full object-cover" />
                     </div>
 
                     <div

@@ -98,7 +98,7 @@ export function DashboardScreen() {
             className="glass-card rounded-2xl p-2 text-center border border-white/40 dark:border-slate-700 cursor-pointer hover:border-[rgba(var(--glow-color-rgb),0.5)] transition-all duration-300 hover:-translate-y-1 group"
           >
             <div className="w-10 h-14 mx-auto mb-1 rounded-md overflow-hidden border border-[rgba(var(--glow-color-rgb),0.4)] shadow-sm group-hover:shadow-[0_0_15px_rgba(var(--glow-color-rgb),0.5)] transition-shadow">
-              <img src={images['../../assets/cards/back.jpg']} alt="Daily" className="w-full h-full object-cover" />
+              <img src={images['../../assets/cards/back.webp']} alt="Daily" className="w-full h-full object-cover" />
             </div>
             <div className="text-[10px] font-bold text-[rgb(var(--glow-color-rgb))] mt-1.5">کارت روزانه</div>
           </div>

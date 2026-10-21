@@ -68,7 +68,7 @@ export function DailyCard() {
     </div>
   );
 
-  const backImage = images['../../assets/cards/back.jpg'];
+  const backImage = images['../../assets/cards/back.webp'];
   const frontImage = images[`../../assets/cards/${card.fileName}`];
 
   if (!frontImage) return <div className="text-center text-red-500 py-4">تصویر کارت پیدا نشد.</div>;
