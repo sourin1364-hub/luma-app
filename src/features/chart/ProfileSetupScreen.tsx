@@ -127,7 +127,6 @@ export function ProfileSetupScreen() {
                 <PersianTimeInput value={birthTime} onChange={setBirthTime} />
               </div>
 
-              {/* فیلد شهر تولد - هماهنگ با صفحه آسترولوژی */}
               <div className="relative z-20">
                 <Label className="text-[var(--text-main)] text-xs flex items-center gap-1 mb-1"><MapPin className="w-3 h-3" /> شهر تولد</Label>
                 <div onClick={() => setShowCityList(!showCityList)} className="w-full bg-[var(--bg-card)] border border-[var(--border-gold)] rounded-xl px-4 py-3 cursor-pointer flex justify-between items-center">

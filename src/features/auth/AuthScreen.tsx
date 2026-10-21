@@ -10,7 +10,6 @@ import {
   type AuthErrorCode,
 } from "./authService";
 import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Logo } from "../../components/ui/Logo";
 import { motion } from "framer-motion";
@@ -141,7 +140,7 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
 
   if (isForgotPassword) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden text-[var(--text-main)] bg-[var(--bg-main)]" dir="rtl">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200 bg-[var(--bg-main)]" dir="rtl">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center mb-8 mt-8">
           <div className="flex items-center gap-4 text-[#D6B56D] drop-shadow-md mb-2">
             <Logo size={50} className="animate-[spin_25s_linear_infinite]" />
@@ -150,45 +149,45 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
         </motion.div>
         
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
-          <div className="bg-[var(--bg-card)] border border-[#8B5CF6]/30 rounded-[2rem] w-full shadow-2xl p-8">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-gold)] rounded-[2rem] w-full shadow-2xl p-8">
             <h2 className="text-xl font-bold text-center text-[#D6B56D] mb-4">بازیابی رمز عبور</h2>
-            <p className="text-center text-[var(--text-muted)] text-xs mb-6">برای امنیت حساب، اطلاعات اصلی خود را وارد کنید.</p>
+            <p className="text-center text-slate-400 text-xs mb-6">برای امنیت حساب، اطلاعات اصلی خود را وارد کنید.</p>
             
             <form onSubmit={handleSecurityReset} className="space-y-3">
               <div className="space-y-1">
-                <Label className="text-[var(--text-muted)] text-xs">شناسه کاربری</Label>
-                <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="مثلاً: ali_reza" className="bg-[var(--bg-main)] border-slate-700 text-white h-10 text-sm" />
+                <Label className="text-slate-300 text-xs">شناسه کاربری</Label>
+                <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="مثلاً: ali_reza" className="lux-input-field h-10 text-sm" />
               </div>
 
               <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1">
-                  <Label className="text-[var(--text-muted)] text-xs">سال تولد</Label>
-                  <Input type="number" value={recYear} onChange={(e) => setRecYear(e.target.value)} placeholder="1370" className="bg-[var(--bg-main)] border-slate-700 text-white text-center h-10 text-sm" />
+                  <Label className="text-slate-300 text-xs">سال تولد</Label>
+                  <input type="number" value={recYear} onChange={(e) => setRecYear(e.target.value)} placeholder="1370" className="lux-input-field text-center h-10 text-sm" />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[var(--text-muted)] text-xs">ماه</Label>
-                  <Input type="number" value={recMonth} onChange={(e) => setRecMonth(e.target.value)} placeholder="1" className="bg-[var(--bg-main)] border-slate-700 text-white text-center h-10 text-sm" />
+                  <Label className="text-slate-300 text-xs">ماه</Label>
+                  <input type="number" value={recMonth} onChange={(e) => setRecMonth(e.target.value)} placeholder="1" className="lux-input-field text-center h-10 text-sm" />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[var(--text-muted)] text-xs">روز</Label>
-                  <Input type="number" value={recDay} onChange={(e) => setRecDay(e.target.value)} placeholder="1" className="bg-[var(--bg-main)] border-slate-700 text-white text-center h-10 text-sm" />
+                  <Label className="text-slate-300 text-xs">روز</Label>
+                  <input type="number" value={recDay} onChange={(e) => setRecDay(e.target.value)} placeholder="1" className="lux-input-field text-center h-10 text-sm" />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-[var(--text-muted)] text-xs">نام مادر</Label>
-                <Input value={recMotherName} onChange={(e) => setRecMotherName(e.target.value)} placeholder="نام مادر خود را وارد کنید" className="bg-[var(--bg-main)] border-slate-700 text-white h-10 text-sm" />
+                <Label className="text-slate-300 text-xs">نام مادر</Label>
+                <input value={recMotherName} onChange={(e) => setRecMotherName(e.target.value)} placeholder="نام مادر خود را وارد کنید" className="lux-input-field h-10 text-sm" />
               </div>
 
               <div className="space-y-1">
-                <Label className="text-[var(--text-muted)] text-xs">رمز عبور جدید</Label>
-                <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="حداقل ۸ کاراکتر" className="bg-[var(--bg-main)] border-slate-700 text-white h-10 text-sm" />
+                <Label className="text-slate-300 text-xs">رمز عبور جدید</Label>
+                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="حداقل ۸ کاراکتر" className="lux-input-field h-10 text-sm" />
               </div>
 
               {error && <p className="text-red-400 text-xs text-center bg-red-900/20 p-2 rounded-lg leading-relaxed">{error}</p>}
               {success && <p className="text-green-400 text-xs text-center bg-green-900/20 p-2 rounded-lg leading-relaxed">{success}</p>}
 
-              <Button type="submit" disabled={loading} className="w-full glow-btn-primary h-10 rounded-xl mt-2 font-bold text-sm text-[#0B0D1A]">
+              <Button type="submit" disabled={loading} className="btn-gold-wave w-full h-10 rounded-xl mt-2 text-sm">
                 {loading ? "..." : "تغییر رمز عبور"}
               </Button>
               
@@ -203,7 +202,7 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden text-[var(--text-main)] bg-[var(--bg-main)]" dir="rtl">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200 bg-[var(--bg-main)]" dir="rtl">
       {isUpgrade && (
          <button onClick={() => setCurrentRoute("settings")} className="absolute top-6 right-6 text-sm text-[#D6B56D] font-bold hover:underline">انصراف</button>
       )}
@@ -213,48 +212,47 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
           <h1 className="text-5xl font-logo font-bold tracking-[0.2em]">LUMA</h1>
         </div>
         <p className="text-[#8B5CF6] font-medium">به دنیای درون خود خوش آمدید</p>
-        <p className="text-xs text-slate-500 mt-2">نسخه: v1.4 (Security Questions)</p>
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
-        <div className="bg-[var(--bg-card)] border border-[#8B5CF6]/30 rounded-[2rem] w-full shadow-2xl p-8">
+        <div className="bg-[var(--bg-card)] border border-[var(--border-gold)] rounded-[2rem] w-full shadow-2xl p-8">
           <h2 className="text-2xl font-bold text-center text-[#D6B56D] mb-6">
             {isUpgrade ? "ثبت‌نام و ارتقای حساب" : isLogin ? t("login") : t("register")}
           </h2>
 
           {isUpgrade && (
-            <p className="text-center text-[var(--text-muted)] text-xs mb-4 leading-relaxed">
+            <p className="text-center text-slate-400 text-xs mb-4 leading-relaxed">
               با ثبت‌نام، تمام اطلاعات مهمان شما به حساب جدید منتقل می‌شود.
             </p>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="username" className="text-[var(--text-muted)]">شناسه کاربری (فقط انگلیسی)</Label>
+              <Label htmlFor="username" className="text-slate-300">شناسه کاربری (فقط انگلیسی)</Label>
               <input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="مثلاً: ali_reza" className="lux-input-field" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-[var(--text-muted)]">{t("password")}</Label>
+              <Label htmlFor="password" className="text-slate-300">{t("password")}</Label>
               <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="رمز عبور" className="lux-input-field" />
             </div>
 
             {!isLogin && (
               <div className="space-y-1.5">
-                <Label htmlFor="confirmPassword" className="text-[var(--text-muted)]">تأیید رمز عبور</Label>
-                <input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="تأیید رمز عبور" className="lux-input-field" />
+                <Label htmlFor="confirmPassword" className="text-slate-300">تأیید رمز عبور</Label>
+                <input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="تأیید رمز" className="lux-input-field" />
               </div>
             )}
 
             {error && <p className="text-red-400 text-xs font-medium text-center bg-red-900/20 p-2 rounded-lg leading-relaxed">{error}</p>}
 
-            <Button type="submit" disabled={loading} className="w-full glow-btn-primary h-12 rounded-xl mt-2 font-bold text-[#0B0D1A]">
+            <Button type="submit" disabled={loading} className="btn-gold-wave w-full h-12 rounded-xl mt-2 font-bold">
               {loading ? "..." : (isUpgrade ? "ثبت‌نام و انتقال داده‌ها" : isLogin ? t("login") : t("register"))}
             </Button>
           </form>
 
           <div className="mt-4 flex flex-col gap-2 text-center text-sm">
             {isLogin && !isUpgrade && (
-              <button type="button" onClick={() => setIsForgotPassword(true)} className="text-[var(--text-muted)] hover:text-white transition-colors">
+              <button type="button" onClick={() => setIsForgotPassword(true)} className="text-slate-400 hover:text-white transition-colors">
                 رمز عبور را فراموش کرده‌اید؟
               </button>
             )}
@@ -270,7 +268,7 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
                 <span>یا</span>
                 <div className="h-px bg-slate-700 flex-1"></div>
               </div>
-              <Button type="button" variant="outline" onClick={handleGuest} disabled={loading} className="w-full border-[#D6B56D]/30 text-[#D6B56D] hover:bg-[#D6B56D]/10 h-10 rounded-xl">
+              <Button type="button" variant="outline" onClick={handleGuest} disabled={loading} className="btn-outline w-full h-10 rounded-xl">
                 {t("guest")}
               </Button>
             </div>
