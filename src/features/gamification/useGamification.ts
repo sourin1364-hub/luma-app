@@ -29,7 +29,7 @@ export const useGamificationStore = create<GamificationState>((set, get) => ({
     set({ loading: true });
     
     // فقط برای کاربران ابری (آیدی رشته‌ای) از Supabase می‌خوانیم
-    if (navigator.onLine && typeof userId === 'string') {
+    if (navigator.onLine && typeof userId === 'string' && userId.includes('-') && userId.includes('-')) {
       try {
         const { data, error } = await supabase.from('user_stats').select('xp, level').eq('user_id', userId).single();
         if (data && !error) {
@@ -79,7 +79,7 @@ export const useGamificationStore = create<GamificationState>((set, get) => ({
     } catch (e) { console.error("Dexie save error:", e); }
 
     // فقط برای کاربران ابری صف XP می‌سازیم
-    if (typeof user.id === 'string') {
+    if (typeof user.id === 'string' && user.id.includes('-') && user.id.includes('-')) {
       const eventId = crypto.randomUUID();
       queueXpEvent(eventId, amount, 'app_action');
     }

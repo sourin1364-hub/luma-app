@@ -11,7 +11,7 @@ export async function saveReadingOfflineFirst(userId: string | number, type: str
   });
 
   // فقط اگر کاربر آیدی رشته‌ای (UUID) داشته باشد به Supabase می‌فرستیم
-  if (typeof userId === 'string' && navigator.onLine) {
+  if (typeof userId === 'string' && userId.includes('-') && navigator.onLine) {
     try {
       const { error } = await supabase.from('tarot_readings').insert({
         id: uuid, user_id: userId, type, cards, interpretation, created_at: new Date(createdAt).toISOString()
@@ -29,7 +29,7 @@ export async function saveReadingOfflineFirst(userId: string | number, type: str
 
 export async function getReadingsOfflineFirst(userId: string | number) {
   // فقط اگر کاربر آیدی رشته‌ای داشت و آنلاین بود، از Supabase می‌خوانیم
-  if (typeof userId === 'string' && navigator.onLine) {
+  if (typeof userId === 'string' && userId.includes('-') && navigator.onLine) {
     try {
       const { data, error } = await supabase.from('tarot_readings').select('*').eq('user_id', userId).order('created_at', { ascending: false });
 
@@ -60,7 +60,7 @@ window.addEventListener('online', async () => {
    const pending = await db.readings.filter(r => !r.synced).toArray();
    for (const r of pending) {
        // فقط برای رکوردهایی که آیدی رشته‌ای (کاربر ابری) دارند
-       if (typeof r.userId === 'string') {
+       if (typeof r.userId === 'string' && r.userId.includes('-') && r.userId.includes('-')) {
            const { error } = await supabase.from('tarot_readings').insert({
                id: r.uuid, user_id: r.userId, type: r.type, cards: r.cards, interpretation: r.interpretation, created_at: new Date(r.createdAt).toISOString()
            });
