@@ -45,16 +45,21 @@ export function ProfileSetupScreen() {
       motherName: motherName.trim(),
     };
 
-    // 1. آپدیت فوری استور محلی (تا صفحه فریز نشود و سریع رد شود)
+    const isEditing = !!currentUser.birthData;
+
+    // 1. آپدیت فوری استور محلی (تا صفحه فریز نشود)
     useAuthStore.getState().setCurrentUser({
       ...currentUser,
       birthData: newBirthData
     });
 
-    // 2. سینک با دیتابیس در پس‌زمینه
+    // 2. تغییر فوری مسیر (رفع فریز شدن)
+    useAppStore.getState().setCurrentRoute(isEditing ? "profile" : "home");
+
+    // 3. سینک با دیتابیس در پس‌زمینه (بدون مسدود کردن UI)
     try {
       if (typeof currentUser.id === 'string') {
-        // برای کاربران ابری، درخواست‌ها را بدون منتظر ماندن (Await) می‌فرستیم
+        // برای کاربران ابری، درخواست‌ها را در پس‌زمینه می‌فرستیم
         supabase.from('profiles').upsert({
           id: currentUser.id,
           display_name: displayName.trim(),
@@ -63,12 +68,11 @@ export function ProfileSetupScreen() {
         
         updateUserBirthData(currentUser.id, newBirthData).catch(e => console.error("Birth sync err:", e));
       } else {
-        // برای کاربران مهمان، فقط در Dexie ذخیره می‌شود (سریع است)
+        // برای کاربران مهمان، فقط در Dexie ذخیره می‌شود
         await updateUserBirthData(currentUser.id, newBirthData);
       }
     } catch (err: any) {
       console.error("Sync error in background:", err);
-      // حتی اگر خطای شبکه داد، چون استور آپدیت شده، کاربر وارد برنامه می‌شود
     } finally {
       setLoading(false);
     }

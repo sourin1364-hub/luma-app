@@ -37,42 +37,39 @@ export function ProfileSetupScreen() {
     }
 
     setLoading(true);
-    console.log("Saving profile and birth data...");
 
+    const newBirthData = {
+      year: Number(year),
+      month: Number(month),
+      day: Number(day),
+      motherName: motherName.trim(),
+    };
+
+    // 1. آپدیت فوری استور محلی (تا صفحه فریز نشود و سریع رد شود)
+    useAuthStore.getState().setCurrentUser({
+      ...currentUser,
+      birthData: newBirthData
+    });
+
+    // 2. سینک با دیتابیس در پس‌زمینه
     try {
-      // فقط اگر کاربر آنلاین (آیدی رشته‌ای/UUID) باشد در Supabase ذخیره می‌کنیم
       if (typeof currentUser.id === 'string') {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({ 
-            id: currentUser.id, 
-            display_name: displayName.trim(),
-            username: currentUser.username
-          });
-
-        if (profileError) throw new Error(`Profiles: ${profileError.message}`);
+        // برای کاربران ابری، درخواست‌ها را بدون منتظر ماندن (Await) می‌فرستیم
+        supabase.from('profiles').upsert({
+          id: currentUser.id,
+          display_name: displayName.trim(),
+          username: currentUser.username
+        }).then(({error}) => { if(error) console.error("Profile sync err:", error); });
+        
+        updateUserBirthData(currentUser.id, newBirthData).catch(e => console.error("Birth sync err:", e));
+      } else {
+        // برای کاربران مهمان، فقط در Dexie ذخیره می‌شود (سریع است)
+        await updateUserBirthData(currentUser.id, newBirthData);
       }
-
-      const newBirthData = {
-        year: Number(year),
-        month: Number(month),
-        day: Number(day),
-        motherName: motherName.trim(),
-      };
-
-      // این تابع در authService.ts خودش می‌داند برای مهمان در Dexie و برای کاربر ابری در Supabase ذخیره کند
-      await updateUserBirthData(currentUser.id, newBirthData);
-
-      useAuthStore.getState().setCurrentUser({
-        ...currentUser,
-        birthData: newBirthData
-      });
-
-      console.log("Successfully updated store. React should now render HomeScreen.");
-
     } catch (err: any) {
-      console.error(err);
-      setError(isFa ? `خطا: ${err.message}` : `Error: ${err.message}`);
+      console.error("Sync error in background:", err);
+      // حتی اگر خطای شبکه داد، چون استور آپدیت شده، کاربر وارد برنامه می‌شود
+    } finally {
       setLoading(false);
     }
   };
@@ -91,10 +88,10 @@ export function ProfileSetupScreen() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label className="text-slate-300">{isFa ? "نام و نام خانوادگی (نمایشی)" : "Display Name"}</Label>
-              <Input 
-                value={displayName} 
-                onChange={(e) => setDisplayName(e.target.value)} 
-                placeholder={isFa ? "مثلاً: آریان کاملایی" : "e.g., John Doe"} 
+              <Input
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder={isFa ? "مثلاً: آریان کاملایی" : "e.g., John Doe"}
                 className="bg-[#0B0D1A] border-slate-700 text-white"
               />
             </div>
@@ -116,10 +113,10 @@ export function ProfileSetupScreen() {
 
             <div className="space-y-1.5">
               <Label className="text-slate-300">{isFa ? "نام مادر" : "Mother's Name"}</Label>
-              <Input 
-                value={motherName} 
-                onChange={(e) => setMotherName(e.target.value)} 
-                placeholder={isFa ? "برای محاسبات عددی و تاروت" : "For numerology and tarot"} 
+              <Input
+                value={motherName}
+                onChange={(e) => setMotherName(e.target.value)}
+                placeholder={isFa ? "برای محاسبات عددی و تاروت" : "For numerology and tarot"}
                 className="bg-[#0B0D1A] border-slate-700 text-white"
               />
             </div>
