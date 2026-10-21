@@ -160,7 +160,7 @@ export function TarotReadingScreen() {
       try {
         const adviceText = generateTarotSynthesis(drawnCards, selectedSpread!);
         await saveReadingOfflineFirst(
-          currentUser.id,
+          currentUser.id!,
           selectedSpread || "unknown",
           drawnCards.map((d) => d.card.id),
           adviceText

@@ -103,10 +103,10 @@ export function TarotReadingScreen() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [magicCardIndex, setMagicCardIndex] = useState<number | null>(null);
 
-  const playShuffle = useSound('/sounds/shuffle.mp3', 0.6);
-  const playFlip = useSound('/sounds/flip.mp3', 0.8);
-  const playMagic = useSound('/sounds/magic.mp3', 0.5);
-  const playXp = useSound('/sounds/xp.mp3', 0.6);
+  const playShuffle = useSound(`${import.meta.env.BASE_URL}sounds/shuffle.mp3`, 0.6);
+  const playFlip = useSound(`${import.meta.env.BASE_URL}sounds/flip.mp3`, 0.8);
+  const playMagic = useSound(`${import.meta.env.BASE_URL}sounds/magic.mp3`, 0.5);
+  const playXp = useSound(`${import.meta.env.BASE_URL}sounds/xp.mp3`, 0.6);
 
   const readingKeyRef = useRef<number | null>(null);
   const awardedKeyRef = useRef<number | null>(null);
