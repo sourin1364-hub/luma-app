@@ -159,3 +159,56 @@ input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
+/* ============================================
+   استایل منوهای بازشو (Select & Option) لوکس
+   ============================================ */
+select.lux-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: none;
+  background-color: rgba(11, 13, 26, 0.6);
+  border: 1px solid rgba(214, 181, 109, 0.3);
+  color: #F1F5F9;
+  font-weight: 300;
+  padding: 0 2.5rem 0 1rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  width: 100%;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+select.lux-select:focus {
+  outline: none;
+  border-color: rgba(214, 181, 109, 0.8);
+  box-shadow: 0 0 15px rgba(214, 181, 109, 0.2);
+}
+
+/* برای مرورگرهای وب‌کیت (کروم و سافاری) */
+select.lux-select option {
+  background-color: #17182B !important;
+  color: #F1F5F9 !important;
+  padding: 10px;
+}
+
+/* استایل اینپوت‌های لوکس */
+.lux-input {
+  background-color: rgba(11, 13, 26, 0.6) !important;
+  border: 1px solid rgba(214, 181, 109, 0.3) !important;
+  color: #F1F5F9 !important;
+  border-radius: 0.75rem !important;
+  height: 3rem !important;
+  font-weight: 300 !important;
+  transition: all 0.3s ease !important;
+}
+
+.lux-input:focus {
+  border-color: rgba(214, 181, 109, 0.8) !important;
+  box-shadow: 0 0 15px rgba(214, 181, 109, 0.2) !important;
+}
+
+.lux-input::placeholder {
+  color: #64748B !important;
+}
