@@ -19,7 +19,7 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Vazirmatn', 'IRANYekan', 'sans-serif'],
+        sans: ['IRANYekan', 'Vazir', 'sans-serif'],
         logo: ['Cinzel', 'serif'],
       }
     },

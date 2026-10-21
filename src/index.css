@@ -1,3 +1,62 @@
+/* ============================================
+   تعریف فونت‌های ایران‌یکان و وزیر
+   ============================================ */
+@font-face {
+  font-family: 'IRANYekan';
+  src: url('/fonts/IRANYekanThin.woff2') format('woff2');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANYekan';
+  src: url('/fonts/IRANYekanLight.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANYekan';
+  src: url('/fonts/IRANYekanRegular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANYekan';
+  src: url('/fonts/IRANYekanMedium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANYekan';
+  src: url('/fonts/IRANYekanBold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Vazir';
+  src: url('/fonts/Vazir-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Vazir';
+  src: url('/fonts/Vazir-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Vazir';
+  src: url('/fonts/Vazir-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -26,7 +85,7 @@
   body {
     background-color: var(--bg-main);
     color: var(--text-main);
-    font-family: 'Vazirmatn', 'IRANYekan', sans-serif;
+    font-family: 'IRANYekan', 'Vazir', sans-serif;
     background-image: radial-gradient(circle at top, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
                       radial-gradient(circle at bottom, rgba(214, 181, 109, 0.05) 0%, transparent 50%);
     background-attachment: fixed;
@@ -211,4 +270,14 @@ select.lux-select option {
 
 .lux-input::placeholder {
   color: #64748B !important;
+}
+
+/* اعمال فونت به تیترها و عناصر مهم */
+h1, h2, h3, h4, h5, h6, .font-bold, button, .btn, .glow-btn, .glow-btn-primary, .lux-select {
+  font-family: 'IRANYekan', 'Vazir', sans-serif !important;
+}
+
+/* اعمال فونت وزیر به متن‌های طولانی و فیلدهای ورودی */
+p, span, div, input, textarea, .lux-input {
+  font-family: 'Vazir', 'IRANYekan', sans-serif;
 }
