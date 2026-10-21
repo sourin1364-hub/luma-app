@@ -156,32 +156,32 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
             <form onSubmit={handleSecurityReset} className="space-y-3">
               <div className="space-y-1">
                 <Label className="text-slate-300 text-xs">شناسه کاربری</Label>
-                <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="مثلاً: ali_reza" className="lux-input-field h-10 text-sm" />
+                <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="مثلاً: ali_reza" className="w-full h-10 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-3 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 transition-all" />
               </div>
 
               <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1">
                   <Label className="text-slate-300 text-xs">سال تولد</Label>
-                  <input type="number" value={recYear} onChange={(e) => setRecYear(e.target.value)} placeholder="1370" className="lux-input-field text-center h-10 text-sm" />
+                  <input type="number" value={recYear} onChange={(e) => setRecYear(e.target.value)} placeholder="1370" className="w-full h-10 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-3 text-sm text-center text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 transition-all" />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-slate-300 text-xs">ماه</Label>
-                  <input type="number" value={recMonth} onChange={(e) => setRecMonth(e.target.value)} placeholder="1" className="lux-input-field text-center h-10 text-sm" />
+                  <input type="number" value={recMonth} onChange={(e) => setRecMonth(e.target.value)} placeholder="1" className="w-full h-10 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-3 text-sm text-center text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 transition-all" />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-slate-300 text-xs">روز</Label>
-                  <input type="number" value={recDay} onChange={(e) => setRecDay(e.target.value)} placeholder="1" className="lux-input-field text-center h-10 text-sm" />
+                  <input type="number" value={recDay} onChange={(e) => setRecDay(e.target.value)} placeholder="1" className="w-full h-10 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-3 text-sm text-center text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 transition-all" />
                 </div>
               </div>
 
               <div className="space-y-1">
                 <Label className="text-slate-300 text-xs">نام مادر</Label>
-                <input value={recMotherName} onChange={(e) => setRecMotherName(e.target.value)} placeholder="نام مادر خود را وارد کنید" className="lux-input-field h-10 text-sm" />
+                <input value={recMotherName} onChange={(e) => setRecMotherName(e.target.value)} placeholder="نام مادر خود را وارد کنید" className="w-full h-10 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-3 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 transition-all" />
               </div>
 
               <div className="space-y-1">
                 <Label className="text-slate-300 text-xs">رمز عبور جدید</Label>
-                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="حداقل ۸ کاراکتر" className="lux-input-field h-10 text-sm" />
+                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="حداقل ۸ کاراکتر" className="w-full h-10 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-3 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 transition-all" />
               </div>
 
               {error && <p className="text-red-400 text-xs text-center bg-red-900/20 p-2 rounded-lg leading-relaxed">{error}</p>}
@@ -229,17 +229,17 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="username" className="text-slate-300">شناسه کاربری (فقط انگلیسی)</Label>
-              <input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="مثلاً: ali_reza" className="lux-input-field" />
+              <input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="مثلاً: ali_reza" className="w-full h-12 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-4 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 focus:border-[#D6B56D] transition-all" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="password" className="text-slate-300">{t("password")}</Label>
-              <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="رمز عبور" className="lux-input-field" />
+              <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="رمز عبور" className="w-full h-12 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-4 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 focus:border-[#D6B56D] transition-all" />
             </div>
 
             {!isLogin && (
               <div className="space-y-1.5">
                 <Label htmlFor="confirmPassword" className="text-slate-300">تأیید رمز عبور</Label>
-                <input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="تأیید رمز" className="lux-input-field" />
+                <input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="تأیید رمز" className="w-full h-12 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-4 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 focus:border-[#D6B56D] transition-all" />
               </div>
             )}
 

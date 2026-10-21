@@ -114,7 +114,7 @@ export function ProfileSetupScreen() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
                 <Label className="text-[var(--text-main)] text-xs">نام نمایشی</Label>
-                <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="مثلاً: آریان کاملایی" className="lux-input-field" />
+                <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="مثلاً: آریان کاملایی" className="w-full h-12 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-4 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 focus:border-[#D6B56D] transition-all" />
               </div>
 
               <div className="space-y-1.5">
@@ -154,7 +154,7 @@ export function ProfileSetupScreen() {
 
               <div className="space-y-1.5">
                 <Label className="text-[var(--text-main)] text-xs">نام مادر</Label>
-                <input value={motherName} onChange={(e) => setMotherName(e.target.value)} placeholder="نام مادر" className="lux-input-field" />
+                <input value={motherName} onChange={(e) => setMotherName(e.target.value)} placeholder="نام مادر" className="w-full h-12 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-4 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 focus:border-[#D6B56D] transition-all" />
               </div>
 
               {error && <p className="text-red-400 text-xs text-center bg-red-900/20 p-2 rounded-lg">{error}</p>}
