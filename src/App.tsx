@@ -2,36 +2,40 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "./store/useAuthStore";
 import { useAppStore } from "./store/useAppStore";
 import { AuthScreen } from "./features/auth/AuthScreen";
-import { SplashScreen } from "./components/SplashScreen";
-
 import { HomeScreen } from "./features/auth/HomeScreen";
 import { ProfileSetupScreen } from "./features/chart/ProfileSetupScreen";
 import { supabase } from "./lib/supabase";
 import { type User } from "./db";
+import { SplashScreen } from "./components/SplashScreen";
 
 function App() {
   const currentUser = useAuthStore((state) => state.currentUser);
+  const themeMode = useAppStore((state) => state.themeMode);
+  
   const [loading, setLoading] = useState(true);
   const [isRecovery, setIsRecovery] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
-  const themeMode = useAppStore((state) => state.themeMode);
 
-
+  // 1. مدیریت اعمال تم شب و روز (Dark Mode)
   useEffect(() => {
-    if (themeMode === "dark") document.documentElement.classList.add("dark");
-    else document.documentElement.classList.remove("dark");
+    if (themeMode === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [themeMode]);
+
+  // 2. بررسی وضعیت احراز هویت و دریافت اطلاعات کاربر
+  useEffect(() => {
     document.documentElement.setAttribute("lang", "fa");
     document.documentElement.setAttribute("dir", "rtl");
-    
 
-    // بررسی اولیه برای حالت بازیابی رمز
     if (window.location.hash.includes("type=recovery")) {
       setIsRecovery(true);
     }
 
     const checkUser = async (sessionUser: any) => {
       if (!sessionUser) return;
-
       const current = useAuthStore.getState().currentUser;
 
       if (!navigator.onLine && current && current.id === sessionUser.id) {
@@ -79,7 +83,6 @@ function App() {
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      // اگر رویداد بازیابی رمز رخ داد، کاربر را به صفحه تغییر رمز هدایت می‌کنیم
       if (event === "PASSWORD_RECOVERY") {
         setIsRecovery(true);
       }
@@ -108,9 +111,7 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // نمایش صفحه تغییر رمز عبور (حتی اگر کاربر سشن داشته باشد)
-
-
+  // 3. مسیریابی و نمایش صفحات
   if (showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
   }
@@ -121,7 +122,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0B0D1A] text-[#D6B56D] font-bold text-xl">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-main)] text-[rgb(var(--glow-color-rgb))] font-bold text-xl">
         در حال بارگذاری...
       </div>
     );

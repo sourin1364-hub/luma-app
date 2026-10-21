@@ -1,19 +1,42 @@
+/* فونت وزیر از گوگل (به عنوان پشتیبان) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* فونت ایران یکان (در صورت وجود فایل در پوشه public) */
+/* ============================================
+   تعریف فونت‌های محلی (ایران یکان و وزیر)
+   نام فایل‌ها باید دقیقاً مطابق زیر باشد
+   ============================================ */
 @font-face {
   font-family: 'IRANYekan';
-  src: url('/luma-app/fonts/IRANYekanX-Regular.woff2') format('woff2');
+  src: url('/fonts/IRANYekanX-Regular.woff2') format('woff2'),
+       url('/fonts/IRANYekan-Regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'IRANYekan';
-  src: url('/luma-app/fonts/IRANYekanX-Bold.woff2') format('woff2');
+  src: url('/fonts/IRANYekanX-Bold.woff2') format('woff2'),
+       url('/fonts/IRANYekan-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vazir';
+  src: url('/fonts/Vazir-Regular.woff2') format('woff2'),
+       url('/fonts/Vazir.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Vazir';
+  src: url('/fonts/Vazir-Bold.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -41,13 +64,14 @@
   html, body {
     background-color: var(--bg-main);
     color: var(--text-main);
-    font-family: 'IRANYekan', 'Vazirmatn', sans-serif;
+    font-family: 'IRANYekan', 'Vazir', 'Vazirmatn', sans-serif;
     transition: background-color 0.3s ease, color 0.3s ease;
     min-height: 100vh;
   }
 
+  /* فیلدهای ورودی از فونت وزیر استفاده می‌کنند */
   input, textarea, select {
-    font-family: 'Vazirmatn', sans-serif;
+    font-family: 'Vazir', 'Vazirmatn', sans-serif;
     font-weight: 400 !important;
   }
 }
@@ -90,7 +114,7 @@
   }
   .btn-outline:hover {
     background: rgba(214, 181, 109, 0.1);
-    color: var(--glow-color-rgb);
+    color: rgb(var(--glow-color-rgb));
     box-shadow: 0 0 15px rgba(214, 181, 109, 0.2);
   }
 }

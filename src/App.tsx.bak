@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "./store/useAuthStore";
 import { useAppStore } from "./store/useAppStore";
 import { AuthScreen } from "./features/auth/AuthScreen";
+import { SplashScreen } from "./components/SplashScreen";
+
 import { HomeScreen } from "./features/auth/HomeScreen";
 import { ProfileSetupScreen } from "./features/chart/ProfileSetupScreen";
 import { supabase } from "./lib/supabase";
@@ -9,14 +11,27 @@ import { type User } from "./db";
 
 function App() {
   const currentUser = useAuthStore((state) => state.currentUser);
-  const themeMode = useAppStore((state) => state.themeMode);
   const [loading, setLoading] = useState(true);
   const [isRecovery, setIsRecovery] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+  const themeMode = useAppStore((state) => state.themeMode);
+
+
+  
+  useEffect(() => {
+    if (themeMode === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [themeMode]);
 
   useEffect(() => {
+    if (themeMode === "dark") 
+    else 
     document.documentElement.setAttribute("lang", "fa");
     document.documentElement.setAttribute("dir", "rtl");
-    document.documentElement.classList.add("dark");
+    
 
     // بررسی اولیه برای حالت بازیابی رمز
     if (window.location.hash.includes("type=recovery")) {
@@ -58,7 +73,9 @@ function App() {
             year: birthDataRecord.year,
             month: birthDataRecord.month,
             day: birthDataRecord.day,
-            motherName: birthDataRecord.mother_name
+            motherName: birthDataRecord.mother_name,
+            birthTime: birthDataRecord.birth_time,
+            birthPlace: birthDataRecord.birth_place
           } : current?.birthData
         };
 
@@ -101,6 +118,12 @@ function App() {
   }, []);
 
   // نمایش صفحه تغییر رمز عبور (حتی اگر کاربر سشن داشته باشد)
+
+
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
+
   if (isRecovery) {
     return <AuthScreen />;
   }
