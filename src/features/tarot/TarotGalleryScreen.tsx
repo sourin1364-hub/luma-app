@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles, BookOpen } from "lucide-react";
 import { PageHeader } from "../../components/ui/PageHeader";
 
-const images = import.meta.glob('../../assets/cards/*.jpg', { eager: true, import: 'default' }) as Record<string, string>;
+const images = import.meta.glob('../../assets/cards/*.webp', { eager: true, import: 'default' }) as Record<string, string>;
 
 const CATEGORIES = [
   { id: "all", label: "همه کارت‌ها" },

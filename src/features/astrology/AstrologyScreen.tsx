@@ -9,7 +9,7 @@ import { tarotCards, type TarotCard } from "../../lib/tarotData";
 import { getCardMeaning } from "../../lib/tarotMeanings";
 import { ChartWheel } from "./ChartWheel";
 
-const images = import.meta.glob('../../assets/cards/*.jpg', { eager: true, import: 'default' }) as Record<string, string>;
+const images = import.meta.glob('../../assets/cards/*.webp', { eager: true, import: 'default' }) as Record<string, string>;
 
 const ZODIAC_SIGNS = ["حمل", "ثور", "جوزا", "سرطان", "اسد", "سنبله", "میزان", "عقرب", "قوس", "جدی", "دلو", "حوت"];
 const ZODIAC_EMOJI = ["", "", "", "", "", "", "", "", "", "", "", ""];

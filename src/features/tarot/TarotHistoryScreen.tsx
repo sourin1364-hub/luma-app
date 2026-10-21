@@ -8,7 +8,7 @@ import { History, Calendar, X, Sparkles } from "lucide-react";
 import { PageHeader } from "../../components/ui/PageHeader";
 import * as jalaali from "jalaali-js";
 
-const images = import.meta.glob('../../assets/cards/*.jpg', { eager: true, import: 'default' }) as Record<string, string>;
+const images = import.meta.glob('../../assets/cards/*.webp', { eager: true, import: 'default' }) as Record<string, string>;
 
 const SPREAD_TITLES: Record<string, string> = {
   "single": "تک کارتی",

@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Heart, Split, Layers, HelpCircle } from "lucide-react";
 import { PageHeader } from "../../components/ui/PageHeader";
 
-const images = import.meta.glob('../../assets/cards/*.jpg', { eager: true, import: 'default' }) as Record<string, string>;
+const images = import.meta.glob('../../assets/cards/*.webp', { eager: true, import: 'default' }) as Record<string, string>;
 
 type SpreadType = "single" | "past_present_future" | "love" | "choice";
 

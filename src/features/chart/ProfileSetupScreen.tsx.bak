@@ -18,7 +18,7 @@ export function ProfileSetupScreen() {
   const [month, setMonth] = useState("");
   const [day, setDay] = useState("");
   const [motherName, setMotherName] = useState("");
-
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -31,7 +31,7 @@ export function ProfileSetupScreen() {
       return;
     }
 
-    if (!currentUser) {
+    if (!currentUser || currentUser.id === undefined) {
       setError(isFa ? "خطای شناسایی کاربر" : "User identification error");
       return;
     }
@@ -40,12 +40,12 @@ export function ProfileSetupScreen() {
     console.log("Saving profile and birth data...");
 
     try {
-      // فقط اگر کاربر ابری باشد (آیدی رشته‌ای داشته باشد) در Supabase ذخیره می‌کنیم
+      // فقط اگر کاربر آنلاین (آیدی رشته‌ای/UUID) باشد در Supabase ذخیره می‌کنیم
       if (typeof currentUser.id === 'string') {
         const { error: profileError } = await supabase
           .from('profiles')
-          .upsert({
-            id: currentUser.id,
+          .upsert({ 
+            id: currentUser.id, 
             display_name: displayName.trim(),
             username: currentUser.username
           });
@@ -60,7 +60,7 @@ export function ProfileSetupScreen() {
         motherName: motherName.trim(),
       };
 
-      // این تابع در authService.ts اصلاح شد و خودش می‌داند داده را در Dexie یا Supabase ذخیره کند
+      // این تابع در authService.ts خودش می‌داند برای مهمان در Dexie و برای کاربر ابری در Supabase ذخیره کند
       await updateUserBirthData(currentUser.id, newBirthData);
 
       useAuthStore.getState().setCurrentUser({
@@ -91,10 +91,10 @@ export function ProfileSetupScreen() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label className="text-slate-300">{isFa ? "نام و نام خانوادگی (نمایشی)" : "Display Name"}</Label>
-              <Input
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder={isFa ? "مثلاً: آریان کاملایی" : "e.g., John Doe"}
+              <Input 
+                value={displayName} 
+                onChange={(e) => setDisplayName(e.target.value)} 
+                placeholder={isFa ? "مثلاً: آریان کاملایی" : "e.g., John Doe"} 
                 className="bg-[#0B0D1A] border-slate-700 text-white"
               />
             </div>
@@ -116,10 +116,10 @@ export function ProfileSetupScreen() {
 
             <div className="space-y-1.5">
               <Label className="text-slate-300">{isFa ? "نام مادر" : "Mother's Name"}</Label>
-              <Input
-                value={motherName}
-                onChange={(e) => setMotherName(e.target.value)}
-                placeholder={isFa ? "برای محاسبات عددی و تاروت" : "For numerology and tarot"}
+              <Input 
+                value={motherName} 
+                onChange={(e) => setMotherName(e.target.value)} 
+                placeholder={isFa ? "برای محاسبات عددی و تاروت" : "For numerology and tarot"} 
                 className="bg-[#0B0D1A] border-slate-700 text-white"
               />
             </div>

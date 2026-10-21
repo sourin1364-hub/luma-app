@@ -7,7 +7,7 @@ import { getDailyInterpretation } from "../../lib/tarotMeanings";
 import { useGamification } from "../gamification/useGamification";
 import { Sparkles } from "lucide-react";
 
-const images = import.meta.glob('../../assets/cards/*.jpg', { eager: true, import: 'default' }) as Record<string, string>;
+const images = import.meta.glob('../../assets/cards/*.webp', { eager: true, import: 'default' }) as Record<string, string>;
 
 export function DailyCard() {
   const { i18n } = useTranslation();

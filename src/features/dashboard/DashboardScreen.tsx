@@ -9,7 +9,7 @@ import { DailyCard } from "../chart/DailyCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Compass, User, Settings as SettingsIcon, Star, Moon, Target, Zap, Layers, X } from "lucide-react";
 
-const images = import.meta.glob('../../assets/cards/*.jpg', { eager: true, import: 'default' }) as Record<string, string>;
+const images = import.meta.glob('../../assets/cards/*.webp', { eager: true, import: 'default' }) as Record<string, string>;
 
 export function DashboardScreen() {
   const currentUser = useAuthStore((s) => s.currentUser);
