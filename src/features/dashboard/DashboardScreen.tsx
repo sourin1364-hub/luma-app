@@ -9,6 +9,12 @@ import { DailyCard } from "../chart/DailyCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Compass, User, Settings as SettingsIcon, Star, Moon, Target, Zap, Layers, X } from "lucide-react";
 
+const toFa = (num: any) => {
+  const n = Number(num);
+  if (isNaN(n)) return "";
+  return n.toLocaleString('fa-IR');
+};
+
 const images = import.meta.glob('../../assets/cards/*.webp', { eager: true, import: 'default' }) as Record<string, string>;
 
 export function DashboardScreen() {
@@ -68,34 +74,34 @@ export function DashboardScreen() {
         {/* آمار کوتاه ( کارت) */}
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} className="grid grid-cols-2 md:grid-cols-4 gap-3">
           
-          <div className="glass-card rounded-2xl p-3 text-center border border-white/40 dark:border-slate-700">
+          <div className="glow-card rounded-2xl p-3 text-center">
             <div className="w-10 h-10 mx-auto mb-1.5 rounded-full bg-[rgba(var(--glow-color-rgb),0.1)] flex items-center justify-center">
               <Target className="w-5 h-5 text-[rgb(var(--glow-color-rgb))]" />
             </div>
-            <div className="text-lg font-bold text-[rgb(var(--glow-color-rgb))]">{levelInfo.level}</div>
+            <div className="text-lg font-bold text-[rgb(var(--glow-color-rgb))]">{toFa(levelInfo.level)}</div>
             <div className="text-[10px] text-slate-500 dark:text-slate-400">سطح</div>
           </div>
           
-          <div className="glass-card rounded-2xl p-3 text-center border border-white/40 dark:border-slate-700">
+          <div className="glow-card rounded-2xl p-3 text-center">
             <div className="w-10 h-10 mx-auto mb-1.5 rounded-full bg-[rgba(var(--glow-color-rgb),0.1)] flex items-center justify-center">
               <Zap className="w-5 h-5 text-[rgb(var(--glow-color-rgb))]" />
             </div>
-            <div className="text-lg font-bold text-[rgb(var(--glow-color-rgb))]">{levelInfo.totalXp}</div>
+            <div className="text-lg font-bold text-[rgb(var(--glow-color-rgb))]">{toFa(levelInfo.totalXp)}</div>
             <div className="text-[10px] text-slate-500 dark:text-slate-400">XP کل</div>
           </div>
           
-          <div className="glass-card rounded-2xl p-3 text-center border border-white/40 dark:border-slate-700">
+          <div className="glow-card rounded-2xl p-3 text-center">
             <div className="w-10 h-10 mx-auto mb-1.5 rounded-full bg-[rgba(var(--glow-color-rgb),0.1)] flex items-center justify-center">
               <Layers className="w-5 h-5 text-[rgb(var(--glow-color-rgb))]" />
             </div>
-            <div className="text-lg font-bold text-[rgb(var(--glow-color-rgb))]">{readingsCount}</div>
+            <div className="text-lg font-bold text-[rgb(var(--glow-color-rgb))]">{toFa(readingsCount)}</div>
             <div className="text-[10px] text-slate-500 dark:text-slate-400">فال‌ها</div>
           </div>
 
           {/* کارت روزانه در قالب یک کادر کلیک‌پذیر */}
           <div 
             onClick={() => setShowDailyModal(true)}
-            className="glass-card rounded-2xl p-2 text-center border border-white/40 dark:border-slate-700 cursor-pointer hover:border-[rgba(var(--glow-color-rgb),0.5)] transition-all duration-300 hover:-translate-y-1 group"
+            className="glow-card rounded-2xl p-2 text-center cursor-pointer hover:border-[rgba(var(--glow-color-rgb),0.5)] transition-all duration-300 hover:-translate-y-1 group"
           >
             <div className="w-10 h-14 mx-auto mb-1 rounded-md overflow-hidden border border-[rgba(var(--glow-color-rgb),0.4)] shadow-sm group-hover:shadow-[0_0_15px_rgba(var(--glow-color-rgb),0.5)] transition-shadow">
               <img src={images['../../assets/cards/back.webp']} alt="Daily" className="w-full h-full object-cover" />
@@ -117,7 +123,7 @@ export function DashboardScreen() {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setCurrentRoute(item.id)}
-                className="glass-card rounded-2xl p-4 flex flex-col items-center text-center gap-2 border border-white/40 dark:border-slate-700 hover:border-[rgba(var(--glow-color-rgb),0.5)] transition-colors group shadow-md"
+                className="glow-card rounded-2xl p-4 flex flex-col items-center text-center gap-2 hover:border-[rgba(var(--glow-color-rgb),0.5)] transition-colors group shadow-md"
               >
                 <div className="w-11 h-11 rounded-full bg-[rgba(var(--glow-color-rgb),0.1)] flex items-center justify-center group-hover:bg-[rgba(var(--glow-color-rgb),0.2)] transition-colors">
                   <item.icon className="w-5 h-5 text-[rgb(var(--glow-color-rgb))]" />

@@ -179,7 +179,9 @@ export async function updateUserBirthData(userId: string | number, birthData: Bi
       year: birthData.year,
       month: birthData.month,
       day: birthData.day,
-      mother_name: birthData.motherName
+      mother_name: birthData.motherName,
+      birth_time: birthData.birthTime,
+      birth_place: birthData.birthPlace
     });
     if (error) throw new Error(`Birth Profile Error: ${error.message}`);
   } else {

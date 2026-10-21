@@ -64,7 +64,9 @@ function App() {
             year: birthDataRecord.year,
             month: birthDataRecord.month,
             day: birthDataRecord.day,
-            motherName: birthDataRecord.mother_name
+            motherName: birthDataRecord.mother_name,
+            birthTime: birthDataRecord.birth_time,
+            birthPlace: birthDataRecord.birth_place
           } : current?.birthData
         };
 
