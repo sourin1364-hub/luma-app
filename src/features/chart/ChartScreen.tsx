@@ -160,7 +160,7 @@ export function ChartScreen() {
         </div>
 
         <div className="flex flex-col gap-4 pb-10">
-          <button onClick={() => setCurrentRoute("tarot_menu")} className="glow-btn w-full h-14"><div className="glow-btn-inner text-white font-bold">{"\u0641\u0627\u0644 \u062A\u0627\u0631\u0648\u062A"}</div></button>
+          <button onClick={() => setCurrentRoute("tarot_menu")} className="btn-animated-primary w-full h-14 flex items-center justify-center text-lg shadow-lg">{"\u0641\u0627\u0644 \u062a\u0627\u0631\u0648\u062a"}</button>
           <button onClick={logout} className="w-full border border-[rgba(var(--glow-color-rgb),0.3)] text-[rgb(var(--glow-color-rgb))] rounded-full h-12 font-bold">{"\u062E\u0631\u0648\u062C \u0627\u0632 \u062D\u0633\u0627\u0628"}</button>
         </div>
       </div>

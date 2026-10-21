@@ -242,7 +242,7 @@ export function AstrologyScreen() {
               )}
             </div>
             {error && <p className="text-red-500 text-sm font-bold text-center bg-red-50 p-3 rounded-lg">{error}</p>}
-            <button type="submit" disabled={loading} className="btn-calculate w-full h-14 flex items-center justify-center text-lg">
+            <button type="submit" disabled={loading} className="btn-animated-primary w-full h-14 flex items-center justify-center text-lg">
               {loading ? "در حال محاسبه..." : "محاسبه چارت تولد"}
             </button>
           </form>
