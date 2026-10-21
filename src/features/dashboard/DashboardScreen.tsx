@@ -56,7 +56,7 @@ export function DashboardScreen() {
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center space-y-3">
           <div className="flex items-center gap-4 text-[rgb(var(--glow-color-rgb))] drop-shadow-md">
             <Logo size={44} className="animate-[spin_25s_linear_infinite]" />
-            <h1 className="text-5xl font-logo font-bold tracking-[0.2em]">LUMA</h1>
+            <h1 className="text-5xl font-logo font-bold tracking-[0.2em] text-[rgb(var(--glow-color-rgb))]">LUMA</h1>
           </div>
           
           <div className="text-center mt-3">
@@ -78,7 +78,7 @@ export function DashboardScreen() {
             <div className="w-10 h-10 mx-auto mb-1.5 rounded-full bg-[rgba(var(--glow-color-rgb),0.1)] flex items-center justify-center">
               <Target className="w-5 h-5 text-[rgb(var(--glow-color-rgb))]" />
             </div>
-            <div className="text-lg font-bold text-[rgb(var(--glow-color-rgb))]">{toFa(levelInfo.level)}</div>
+            <div className="text-xl font-bold text-[rgb(var(--glow-color-rgb))]">{toFa(levelInfo.level)}</div>
             <div className="text-[10px] text-slate-500 dark:text-[var(--text-muted)]">سطح</div>
           </div>
           
@@ -86,7 +86,7 @@ export function DashboardScreen() {
             <div className="w-10 h-10 mx-auto mb-1.5 rounded-full bg-[rgba(var(--glow-color-rgb),0.1)] flex items-center justify-center">
               <Zap className="w-5 h-5 text-[rgb(var(--glow-color-rgb))]" />
             </div>
-            <div className="text-lg font-bold text-[rgb(var(--glow-color-rgb))]">{toFa(levelInfo.totalXp)}</div>
+            <div className="text-xl font-bold text-[rgb(var(--glow-color-rgb))]">{toFa(levelInfo.totalXp)}</div>
             <div className="text-[10px] text-slate-500 dark:text-[var(--text-muted)]">XP کل</div>
           </div>
           
@@ -94,7 +94,7 @@ export function DashboardScreen() {
             <div className="w-10 h-10 mx-auto mb-1.5 rounded-full bg-[rgba(var(--glow-color-rgb),0.1)] flex items-center justify-center">
               <Layers className="w-5 h-5 text-[rgb(var(--glow-color-rgb))]" />
             </div>
-            <div className="text-lg font-bold text-[rgb(var(--glow-color-rgb))]">{toFa(readingsCount)}</div>
+            <div className="text-xl font-bold text-[rgb(var(--glow-color-rgb))]">{toFa(readingsCount)}</div>
             <div className="text-[10px] text-slate-500 dark:text-[var(--text-muted)]">فال‌ها</div>
           </div>
 

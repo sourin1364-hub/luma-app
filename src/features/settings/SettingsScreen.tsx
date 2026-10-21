@@ -102,16 +102,16 @@ export function SettingsScreen() {
           <Button 
             onClick={() => setThemeMode(themeMode === "light" ? "dark" : "light")}
             variant="outline" 
-            className="w-full justify-between h-14 rounded-xl settings-btn"
+            className="w-full justify-between h-14 rounded-xl btn-outline px-4"
           >
-            <span>{themeMode === "light" ? "حالت روز (آبی)" : "حالت شب (تیره)"}</span>
+            <span>{themeMode === "light" ? "تغییر به حالت شب" : "تغییر به حالت روز"}</span>
             {themeMode === "light" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </Button>
 
           <Button 
             onClick={() => setSoundEnabled(!soundEnabled)}
             variant="outline" 
-            className="w-full justify-between h-14 rounded-xl settings-btn"
+            className="w-full justify-between h-14 rounded-xl btn-outline px-4"
           >
             <span>{soundEnabled ? "افکت‌های صوتی: روشن" : "افکت‌های صوتی: خاموش"}</span>
             {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
@@ -123,16 +123,16 @@ export function SettingsScreen() {
         <div className="glow-card-inner p-6 flex flex-col gap-4">
           <h2 className="text-[rgb(var(--glow-color-rgb))] font-bold mb-2">مدیریت داده‌ها</h2>
           
-          <Button onClick={handleExport} variant="outline" className="w-full justify-start h-14 rounded-xl settings-btn">
+          <Button onClick={handleExport} variant="outline" className="w-full justify-start h-14 rounded-xl btn-outline px-4">
             <Download className="w-5 h-5 ml-3" /> دریافت بکاپ (Export)
           </Button>
 
           <input type="file" accept=".json" ref={fileInputRef} onChange={handleImport} className="hidden" />
-          <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="w-full justify-start h-14 rounded-xl settings-btn">
+          <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="w-full justify-start h-14 rounded-xl btn-outline px-4">
             <Upload className="w-5 h-5 ml-3" /> بازیابی بکاپ (Import)
           </Button>
           
-          <Button onClick={handleClearData} variant="outline" className="w-full justify-start h-14 rounded-xl settings-danger-btn">
+          <Button onClick={handleClearData} variant="outline" className="w-full justify-start h-14 rounded-xl btn-outline px-4 text-red-500 border-red-500/30">
             <Trash2 className="w-5 h-5 ml-3" /> پاک کردن تمام داده‌ها
           </Button>
         </div>
@@ -141,7 +141,7 @@ export function SettingsScreen() {
       <div className="glow-card rounded-2xl w-full">
         <div className="glow-card-inner p-6 flex flex-col gap-4">
           <h2 className="text-[rgb(var(--glow-color-rgb))] font-bold mb-2">درباره برنامه</h2>
-          <Button onClick={() => setCurrentRoute("about")} variant="outline" className="w-full justify-start h-14 rounded-xl settings-btn">
+          <Button onClick={() => setCurrentRoute("about")} variant="outline" className="w-full justify-start h-14 rounded-xl btn-outline px-4">
             <Info className="w-5 h-5 ml-3" /> درباره ما (Lumera)
           </Button>
         </div>

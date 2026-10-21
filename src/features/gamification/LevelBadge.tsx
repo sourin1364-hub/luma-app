@@ -7,6 +7,7 @@ export function LevelBadge({ onClick }: { onClick?: () => void }) {
   const language = useAppStore((s) => s.language);
   const isFa = language === "fa";
   const percent = Math.round(levelInfo.progress * 100);
+  const toFa = (num: number) => num.toLocaleString('fa-IR');
 
   if (loading) return null;
 
@@ -15,17 +16,14 @@ export function LevelBadge({ onClick }: { onClick?: () => void }) {
       onClick={onClick}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="glass-card glow-border rounded-full px-3 py-1.5 flex items-center gap-2 shrink-0"
-      aria-label={isFa ? "\u0633\u0637\u062D \u06A9\u0627\u0631\u0628\u0631" : "User level"}
+      className="glow-card px-4 py-2 flex items-center gap-3 shrink-0 rounded-full border border-[var(--border-gold)] shadow-[0_0_15px_rgba(var(--glow-color-rgb),0.2)]"
     >
-      <span className="text-xs font-bold text-primary whitespace-nowrap">
-        {isFa ? `\u0633\u0637\u062D ${levelInfo.level}` : `Lv.${levelInfo.level}`}
+      <span className="text-xs font-bold text-[rgb(var(--glow-color-rgb))] whitespace-nowrap font-sans">
+        {isFa ? `سطح ${toFa(levelInfo.level)}` : `Lv.${levelInfo.level}`}
       </span>
-      <div className="w-14 h-1.5 bg-muted rounded-full overflow-hidden">
+      <div className="w-16 h-1.5 bg-black/20 dark:bg-white/10 rounded-full overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-primary to-yellow-400 transition-all duration-500"
+          className="h-full bg-gradient-to-r from-[#D6B56D] to-[#F3D58A] transition-all duration-500"
           style={{ width: `${percent}%` }}
         />
       </div>

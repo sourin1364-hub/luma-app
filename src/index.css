@@ -1,283 +1,96 @@
-/* ============================================
-   تعریف فونت‌های ایران‌یکان و وزیر
-   ============================================ */
-@font-face {
-  font-family: 'IRANYekan';
-  src: url('/fonts/IRANYekanThin.woff2') format('woff2');
-  font-weight: 100;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'IRANYekan';
-  src: url('/fonts/IRANYekanLight.woff2') format('woff2');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'IRANYekan';
-  src: url('/fonts/IRANYekanRegular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'IRANYekan';
-  src: url('/fonts/IRANYekanMedium.woff2') format('woff2');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'IRANYekan';
-  src: url('/fonts/IRANYekanBold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Vazir';
-  src: url('/fonts/Vazir-Light.woff2') format('woff2');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Vazir';
-  src: url('/fonts/Vazir-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Vazir';
-  src: url('/fonts/Vazir-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* فونت ایران یکان (در صورت وجود فایل در پوشه public) */
+@font-face {
+  font-family: 'IRANYekan';
+  src: url('/luma-app/fonts/IRANYekanX-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANYekan';
+  src: url('/luma-app/fonts/IRANYekanX-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
-    /* Light Mode - Soft & Elegant */
     --bg-main: #F8F9FA;
-    --bg-card: rgba(255, 255, 255, 0.7);
+    --bg-card: rgba(255, 255, 255, 0.85);
     --text-main: #1E293B;
     --text-muted: #64748B;
     --border-gold: rgba(180, 140, 60, 0.4);
-    --glow-color-rgb: 180, 140, 60; /* Gold */
+    --glow-color-rgb: 180, 140, 60;
   }
 
   .dark {
-    /* Dark Mode - Deep Navy & Mysterious */
     --bg-main: #0B0D1A;
-    --bg-card: rgba(23, 24, 43, 0.6);
+    --bg-card: rgba(23, 24, 43, 0.85);
     --text-main: #F1F5F9;
     --text-muted: #94A3B8;
     --border-gold: rgba(214, 181, 109, 0.5);
-    --glow-color-rgb: 214, 181, 109; /* Gold */
+    --glow-color-rgb: 214, 181, 109;
   }
 
-  body {
+  html, body {
     background-color: var(--bg-main);
     color: var(--text-main);
-    font-family: 'IRANYekan', 'Vazir', sans-serif;
-    background-image: radial-gradient(circle at top, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
-                      radial-gradient(circle at bottom, rgba(214, 181, 109, 0.05) 0%, transparent 50%);
-    background-attachment: fixed;
+    font-family: 'IRANYekan', 'Vazirmatn', sans-serif;
     transition: background-color 0.3s ease, color 0.3s ease;
-    overflow-x: hidden;
+    min-height: 100vh;
   }
 
-  /* ظرافت فونت‌ها: حذف ضخامت اضافی در کادرها */
   input, textarea, select {
-    font-weight: 300 !important;
-    letter-spacing: 0.5px;
+    font-family: 'Vazirmatn', sans-serif;
+    font-weight: 400 !important;
   }
-  
-  h1, h2, h3, h4, .font-bold {
-    font-weight: 700;
-  }
-  
-  .font-light { font-weight: 300; }
-  .font-normal { font-weight: 400; }
-  .font-medium { font-weight: 500; }
 }
 
 @layer components {
-  /* کارت‌های یکدست با استروک طلایی باریک */
   .glow-card {
-    @apply relative overflow-hidden rounded-2xl;
     background: var(--bg-card);
     border: 1px solid var(--border-gold);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2), inset 0 0 12px rgba(var(--glow-color-rgb), 0.05);
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    color: var(--text-main);
   }
 
-  .glow-card-inner {
-    @apply relative z-10 h-full w-full;
+  /* دکمه طلایی اصلی */
+  .btn-primary {
+    background: linear-gradient(135deg, #D6B56D 0%, #B89546 100%);
+    color: #0B0D1A;
+    font-family: 'IRANYekan', sans-serif;
+    font-weight: 700;
+    border: 1px solid #D6B56D;
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(214, 181, 109, 0.3);
   }
-
-  /* دکمه‌های یکدست با استروک طلایی */
-  .glow-btn {
-    @apply relative overflow-hidden rounded-xl transition-all duration-300;
-    background: linear-gradient(135deg, rgba(var(--glow-color-rgb), 0.15) 0%, transparent 100%);
-    border: 1px solid var(--border-gold);
-    color: rgb(var(--glow-color-rgb));
-  }
-  
-  .glow-btn:hover {
-    background: linear-gradient(135deg, rgba(var(--glow-color-rgb), 0.25) 0%, rgba(var(--glow-color-rgb), 0.05) 100%);
-    box-shadow: 0 0 20px rgba(var(--glow-color-rgb), 0.3);
+  .btn-primary:hover {
+    box-shadow: 0 0 25px rgba(214, 181, 109, 0.6);
     transform: translateY(-2px);
   }
 
-  .glow-btn:active {
-    transform: translateY(0);
+  /* دکمه شفاف با حاشیه طلایی */
+  .btn-outline {
+    background: transparent;
+    color: var(--text-main);
+    font-family: 'IRANYekan', sans-serif;
+    border: 1px solid var(--border-gold);
+    border-radius: 1rem;
+    transition: all 0.3s ease;
   }
-
-  /* دکمه اصلی (طلایی پر رنگ برای اکشن‌های مهم) */
-  .btn-primary {
-    @apply bg-[rgb(var(--glow-color-rgb))] text-[#0B0D1A] rounded-xl font-bold transition-all duration-300 hover:brightness-110 shadow-[0_0_15px_rgba(var(--glow-color-rgb),0.4)];
-    border: 1px solid transparent;
+  .btn-outline:hover {
+    background: rgba(214, 181, 109, 0.1);
+    color: var(--glow-color-rgb);
+    box-shadow: 0 0 15px rgba(214, 181, 109, 0.2);
   }
-}
-
-/* اسکرول‌بار مرموز */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(var(--glow-color-rgb), 0.3); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(var(--glow-color-rgb), 0.6); }
-/* استروک طلایی انیمیشنی (چرخشی) */
-@keyframes spin-border {
-  100% { transform: rotate(360deg); }
-}
-
-.animated-glow-border {
-  position: relative;
-  overflow: hidden;
-  border-radius: 12px;
-  background: var(--bg-card);
-  z-index: 1;
-  border: none !important;
-}
-
-.animated-glow-border::before {
-  content: '';
-  position: absolute;
-  top: -50%; left: -50%;
-  width: 200%; height: 200%;
-  background: conic-gradient(transparent 0%, rgba(var(--glow-color-rgb), 1) 20%, transparent 40%);
-  animation: spin-border 4s linear infinite;
-  z-index: -2;
-}
-
-.animated-glow-border::after {
-  content: '';
-  position: absolute;
-  inset: 1.5px; /* ضخامت استروک */
-  background: var(--bg-main); /* رنگ داخلی */
-  border-radius: 10px;
-  z-index: -1;
-}
-
-/* ============================================
-   استروک طلایی درخشان (ایمن و خوانا برای دکمه‌ها)
-   ============================================ */
-.glow-btn-primary {
-  background: linear-gradient(135deg, #D6B56D 0%, #B89546 100%);
-  color: #0B0D1A;
-  border: 1px solid #D6B56D;
-  transition: all 0.3s ease;
-  box-shadow: 0 0 15px rgba(214, 181, 109, 0.4);
-}
-.glow-btn-primary:hover {
-  box-shadow: 0 0 25px rgba(214, 181, 109, 0.8);
-  transform: translateY(-2px);
-}
-
-.glow-btn-outline {
-  background: transparent;
-  color: #D6B56D;
-  border: 1px solid rgba(214, 181, 109, 0.5);
-  transition: all 0.3s ease;
-}
-.glow-btn-outline:hover {
-  background: rgba(214, 181, 109, 0.1);
-  box-shadow: 0 0 15px rgba(214, 181, 109, 0.3);
-}
-
-/* اعداد فارسی در فیلدها */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-/* ============================================
-   استایل منوهای بازشو (Select & Option) لوکس
-   ============================================ */
-select.lux-select {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: none;
-  background-color: rgba(11, 13, 26, 0.6);
-  border: 1px solid rgba(214, 181, 109, 0.3);
-  color: #F1F5F9;
-  font-weight: 300;
-  padding: 0 2.5rem 0 1rem;
-  height: 3rem;
-  border-radius: 0.75rem;
-  width: 100%;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-select.lux-select:focus {
-  outline: none;
-  border-color: rgba(214, 181, 109, 0.8);
-  box-shadow: 0 0 15px rgba(214, 181, 109, 0.2);
-}
-
-/* برای مرورگرهای وب‌کیت (کروم و سافاری) */
-select.lux-select option {
-  background-color: #17182B !important;
-  color: #F1F5F9 !important;
-  padding: 10px;
-}
-
-/* استایل اینپوت‌های لوکس */
-.lux-input {
-  background-color: rgba(11, 13, 26, 0.6) !important;
-  border: 1px solid rgba(214, 181, 109, 0.3) !important;
-  color: #F1F5F9 !important;
-  border-radius: 0.75rem !important;
-  height: 3rem !important;
-  font-weight: 300 !important;
-  transition: all 0.3s ease !important;
-}
-
-.lux-input:focus {
-  border-color: rgba(214, 181, 109, 0.8) !important;
-  box-shadow: 0 0 15px rgba(214, 181, 109, 0.2) !important;
-}
-
-.lux-input::placeholder {
-  color: #64748B !important;
-}
-
-/* اعمال فونت به تیترها و عناصر مهم */
-h1, h2, h3, h4, h5, h6, .font-bold, button, .btn, .glow-btn, .glow-btn-primary, .lux-select {
-  font-family: 'IRANYekan', 'Vazir', sans-serif !important;
-}
-
-/* اعمال فونت وزیر به متن‌های طولانی و فیلدهای ورودی */
-p, span, div, input, textarea, .lux-input {
-  font-family: 'Vazir', 'IRANYekan', sans-serif;
 }
