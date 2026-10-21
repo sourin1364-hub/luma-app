@@ -219,7 +219,7 @@ export function TarotReadingScreen() {
           <motion.div
             animate={{ rotateY: [0, 180, 360], y: [0, -10, 0] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            className="w-48 h-72 sm:w-56 sm:h-96 rounded-xl overflow-hidden border-[3px] transition-all duration-300"
+            className="tarot-card-frame w-48 h-72 sm:w-56 sm:h-96 transition-all duration-300"
             style={cardBorderStyle}
           >
             <img src={images['../../assets/cards/back.webp']} alt="Back" className="max-h-[40vh] w-auto object-contain mx-auto rounded-xl" />
