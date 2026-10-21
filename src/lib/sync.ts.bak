@@ -1,5 +1,6 @@
 import { db } from "../db";
 import { supabase } from "./supabase";
+import { syncXpQueue } from "./xpSync";
 
 export async function saveReadingOfflineFirst(userId: string, type: string, cards: number[], interpretation: string) {
   const uuid = crypto.randomUUID();
@@ -28,16 +29,14 @@ export async function saveReadingOfflineFirst(userId: string, type: string, card
 export async function getReadingsOfflineFirst(userId: string) {
   if (navigator.onLine) {
     try {
-      console.log("Fetching history for user ID:", userId);
       const { data, error } = await supabase.from('tarot_readings').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-      
+
       if (error) {
         console.error("Supabase fetch error:", error);
         throw error;
       }
 
       if (data) {
-        console.log("Fetched data from Supabase:", data);
         await db.readings.where('userId').equals(userId).delete();
         for (const r of data) {
            await db.readings.add({ uuid: r.id, userId: r.user_id, type: r.type, cards: r.cards, interpretation: r.interpretation, createdAt: new Date(r.created_at).getTime(), synced: true });
@@ -61,4 +60,7 @@ window.addEventListener('online', async () => {
        });
        if (!error) await db.readings.update(r.id!, { synced: true });
    }
+   
+   // سینک کردن صف XP
+   await syncXpQueue();
 });

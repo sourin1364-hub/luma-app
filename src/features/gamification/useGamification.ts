@@ -28,7 +28,7 @@ export const useGamificationStore = create<GamificationState>((set, get) => ({
   init: async (userId) => {
     set({ loading: true });
     
-    // 1. تلاش برای خواندن از ابر (اولویت با دیتابیس آنلاین)
+    // فقط برای کاربران ابری (آیدی رشته‌ای) از Supabase می‌خوانیم
     if (navigator.onLine && typeof userId === 'string') {
       try {
         const { data, error } = await supabase.from('user_stats').select('xp, level').eq('user_id', userId).single();
@@ -38,7 +38,6 @@ export const useGamificationStore = create<GamificationState>((set, get) => ({
           const xpForNext = 100 + (level - 1) * 20;
           const xpInLevel = totalXp % xpForNext;
           set({ levelInfo: { level, totalXp, xpInLevel, xpForNext, progress: xpInLevel / xpForNext }, loading: false });
-          // آپدیت Dexie برای استفاده در زمان آفلاین
           await db.progress.put({ userId, xp: totalXp, level });
           return;
         }
@@ -47,7 +46,7 @@ export const useGamificationStore = create<GamificationState>((set, get) => ({
       }
     }
 
-    // 2. فالبک به Dexie (در صورت آفلاین بودن)
+    // فالبک به Dexie (برای مهمان‌ها یا آفلاین)
     try {
       const p = await db.progress.get(userId);
       if (p) {
@@ -71,17 +70,15 @@ export const useGamificationStore = create<GamificationState>((set, get) => ({
     const newXp = (levelInfo.totalXp || 0) + amount;
     const level = Math.floor(newXp / 100) + 1;
     
-    // 1. آپدیت آنی رابط کاربری (Optimistic UI)
     set({ levelInfo: { level, totalXp: newXp, xpInLevel: newXp % 100, xpForNext: 100, progress: (newXp % 100) / 100 } });
 
-    // 2. ذخیره در Dexie برای حالت آفلاین
     try {
       const existing = await db.progress.get(user.id);
       if (existing) await db.progress.update(user.id, { xp: newXp, level });
       else await db.progress.add({ userId: user.id, xp: newXp, level });
     } catch (e) { console.error("Dexie save error:", e); }
 
-    // 3. اضافه کردن به صف برای ارسال به Supabase
+    // فقط برای کاربران ابری صف XP می‌سازیم
     if (typeof user.id === 'string') {
       const eventId = crypto.randomUUID();
       queueXpEvent(eventId, amount, 'app_action');
