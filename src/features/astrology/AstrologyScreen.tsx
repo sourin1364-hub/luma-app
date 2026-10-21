@@ -8,6 +8,7 @@ import * as Astronomy from "astronomy-engine";
 import { tarotCards, type TarotCard } from "../../lib/tarotData";
 import { getCardMeaning } from "../../lib/tarotMeanings";
 import { ChartWheel } from "./ChartWheel";
+import { PersianDateInput, PersianTimeInput } from "../../components/ui/PersianDate";
 
 const images = import.meta.glob('../../assets/cards/*.webp', { eager: true, import: 'default' }) as Record<string, string>;
 
@@ -111,11 +112,8 @@ function calculateAscendant(astroTime: Astronomy.AstroTime, lat: number, lon: nu
 
 export function AstrologyScreen() {
   const setCurrentRoute = useAppStore((state) => state.setCurrentRoute);
-  const [year, setYear] = useState("");
-  const [month, setMonth] = useState("");
-  const [day, setDay] = useState("");
-  const [hour, setHour] = useState("");
-  const [minute, setMinute] = useState("");
+  const [birthDate, setBirthDate] = useState({ year: 1370, month: 1, day: 1 });
+  const [birthTime, setBirthTime] = useState({ hour: 12, minute: 0 });
   const [citySearch, setCitySearch] = useState("");
   const [selectedCity, setSelectedCity] = useState<City>(CITIES[0]);
   const [showCityList, setShowCityList] = useState(false);
@@ -136,8 +134,8 @@ export function AstrologyScreen() {
     setError("");
     setPlanets(null);
     setAscendant(null);
-    let y = parseInt(year, 10), m = parseInt(month, 10), d = parseInt(day, 10), h = parseInt(hour, 10), min = parseInt(minute, 10);
-    if (isNaN(y) || isNaN(m) || isNaN(d) || isNaN(h) || isNaN(min)) { setError("لطفاً تمام فیلدها را پر کنید."); return; }
+    let y = birthDate.year, m = birthDate.month, d = birthDate.day, h = birthTime.hour, min = birthTime.minute;
+    if (!y || !m || !d) { setError("لطفاً تمام فیلدها را پر کنید."); return; }
     let gYear = y, gMonth = m, gDay = d;
     if (y > 1200 && y < 1700) {
       try { const g = jalaali.toGregorian(y, m, d); gYear = g.gy; gMonth = g.gm; gDay = g.gd; } catch (err) { setError("تاریخ نامعتبر است."); return; }
@@ -215,18 +213,11 @@ export function AstrologyScreen() {
           <form onSubmit={handleCalculate} className="space-y-6">
             <div>
               <label className="flex items-center gap-2 text-sm font-bold mb-2"><Calendar className="w-4 h-4" /> تاریخ تولد (شمسی)</label>
-              <div className="grid grid-cols-3 gap-3">
-                <input type="number" placeholder="سال" value={year} onChange={(e) => setYear(e.target.value)} className="w-full bg-white/50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-3 text-center focus:outline-none focus:border-[rgb(var(--glow-color-rgb))]" />
-                <input type="number" placeholder="ماه" value={month} onChange={(e) => setMonth(e.target.value)} className="w-full bg-white/50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-3 text-center focus:outline-none focus:border-[rgb(var(--glow-color-rgb))]" />
-                <input type="number" placeholder="روز" value={day} onChange={(e) => setDay(e.target.value)} className="w-full bg-white/50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-3 text-center focus:outline-none focus:border-[rgb(var(--glow-color-rgb))]" />
-              </div>
+              <PersianDateInput value={birthDate} onChange={setBirthDate} />
             </div>
             <div>
               <label className="flex items-center gap-2 text-sm font-bold mb-2"><Clock className="w-4 h-4" /> ساعت تولد (به وقت محلی)</label>
-              <div className="grid grid-cols-2 gap-3">
-                <input type="number" placeholder="ساعت (0-23)" value={hour} onChange={(e) => setHour(e.target.value)} className="w-full bg-white/50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-3 text-center focus:outline-none focus:border-[rgb(var(--glow-color-rgb))]" />
-                <input type="number" placeholder="دقیقه (0-59)" value={minute} onChange={(e) => setMinute(e.target.value)} className="w-full bg-white/50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-3 text-center focus:outline-none focus:border-[rgb(var(--glow-color-rgb))]" />
-              </div>
+              <PersianTimeInput value={birthTime} onChange={setBirthTime} />
             </div>
             <div className="relative">
               <label className="flex items-center gap-2 text-sm font-bold mb-2"><MapPin className="w-4 h-4" /> شهر تولد</label>
@@ -251,8 +242,8 @@ export function AstrologyScreen() {
               )}
             </div>
             {error && <p className="text-red-500 text-sm font-bold text-center bg-red-50 p-3 rounded-lg">{error}</p>}
-            <button type="submit" disabled={loading} className="glow-btn w-full h-14">
-              <div className="glow-btn-inner text-white font-bold text-lg">{loading ? "در حال محاسبه..." : "محاسبه چارت تولد"}</div>
+            <button type="submit" disabled={loading} className="btn-calculate w-full h-14 flex items-center justify-center text-lg">
+              {loading ? "در حال محاسبه..." : "محاسبه چارت تولد"}
             </button>
           </form>
         </motion.div>

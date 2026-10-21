@@ -4,32 +4,33 @@ import { ChevronDown } from "lucide-react";
 
 const MONTHS = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
 const enToFa = (str: string | number) => String(str).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
+const faToEn = (str: string) => str.replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
 
 export function PersianDateInput({ value, onChange }: { value: { year: number, month: number, day: number }, onChange: (val: { year: number, month: number, day: number }) => void }) {
   const [yearStr, setYearStr] = useState(enToFa(value.year));
   const [month, setMonth] = useState(value.month);
   const [day, setDay] = useState(value.day);
 
-  // محاسبه تعداد روزهای ماه جاری
   const getDaysInMonth = (y: number, m: number) => {
     if (m <= 6) return 31;
     if (m <= 11) return 30;
     return jalaali.isLeapJalaaliYear(y) ? 30 : 29;
   };
 
-  const maxDays = getDaysInMonth(Number(yearStr.replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))) || 1360, month);
+  const enYear = Number(faToEn(yearStr)) || 1360;
+  const maxDays = getDaysInMonth(enYear, month);
 
   useEffect(() => {
     if (day > maxDays) {
       setDay(maxDays);
-      onChange({ year: Number(yearStr.replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))), month, day: maxDays });
+      onChange({ year: enYear, month, day: maxDays });
     }
-  }, [month, maxDays, day, yearStr, onChange]);
+  }, [month, maxDays, day, enYear, onChange]);
 
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = enToFa(e.target.value).slice(0, 4);
     setYearStr(val);
-    const enVal = Number(val.replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))));
+    const enVal = Number(faToEn(val));
     if (enVal > 1200 && enVal < 1500) {
       onChange({ year: enVal, month, day });
     }
@@ -38,16 +39,14 @@ export function PersianDateInput({ value, onChange }: { value: { year: number, m
   const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const m = Number(e.target.value);
     setMonth(m);
-    onChange({ year: Number(yearStr.replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))), month: m, day });
+    onChange({ year: enYear, month: m, day });
   };
 
   const handleDayChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const d = Number(e.target.value);
     setDay(d);
-    onChange({ year: Number(yearStr.replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))), month, day: d });
+    onChange({ year: enYear, month, day: d });
   };
-
-  const enYear = Number(yearStr.replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))));
 
   return (
     <div className="space-y-2">
