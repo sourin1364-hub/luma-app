@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "./store/useAuthStore";
 import { AuthScreen } from "./features/auth/AuthScreen";
+import { SplashScreen } from "./components/SplashScreen";
+
 import { HomeScreen } from "./features/auth/HomeScreen";
 import { ProfileSetupScreen } from "./features/chart/ProfileSetupScreen";
 import { supabase } from "./lib/supabase";
@@ -10,6 +12,8 @@ function App() {
   const currentUser = useAuthStore((state) => state.currentUser);
   const [loading, setLoading] = useState(true);
   const [isRecovery, setIsRecovery] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+
 
   useEffect(() => {
     document.documentElement.setAttribute("lang", "fa");
@@ -99,6 +103,12 @@ function App() {
   }, []);
 
   // نمایش صفحه تغییر رمز عبور (حتی اگر کاربر سشن داشته باشد)
+
+
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
+
   if (isRecovery) {
     return <AuthScreen />;
   }
