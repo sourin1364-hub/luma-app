@@ -126,3 +126,36 @@
   border-radius: 10px;
   z-index: -1;
 }
+
+/* ============================================
+   استروک طلایی درخشان (ایمن و خوانا برای دکمه‌ها)
+   ============================================ */
+.glow-btn-primary {
+  background: linear-gradient(135deg, #D6B56D 0%, #B89546 100%);
+  color: #0B0D1A;
+  border: 1px solid #D6B56D;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(214, 181, 109, 0.4);
+}
+.glow-btn-primary:hover {
+  box-shadow: 0 0 25px rgba(214, 181, 109, 0.8);
+  transform: translateY(-2px);
+}
+
+.glow-btn-outline {
+  background: transparent;
+  color: #D6B56D;
+  border: 1px solid rgba(214, 181, 109, 0.5);
+  transition: all 0.3s ease;
+}
+.glow-btn-outline:hover {
+  background: rgba(214, 181, 109, 0.1);
+  box-shadow: 0 0 15px rgba(214, 181, 109, 0.3);
+}
+
+/* اعداد فارسی در فیلدها */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

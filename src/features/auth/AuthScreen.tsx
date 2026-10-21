@@ -188,7 +188,7 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
               {error && <p className="text-red-400 text-xs text-center bg-red-900/20 p-2 rounded-lg leading-relaxed">{error}</p>}
               {success && <p className="text-green-400 text-xs text-center bg-green-900/20 p-2 rounded-lg leading-relaxed">{success}</p>}
 
-              <Button type="submit" disabled={loading} className="animated-glow-border w-full text-white h-10 rounded-xl mt-2 font-bold text-sm bg-transparent">
+              <Button type="submit" disabled={loading} className="w-full glow-btn-primary h-10 rounded-xl mt-2 font-bold text-sm text-[#0B0D1A]">
                 {loading ? "..." : "تغییر رمز عبور"}
               </Button>
               
@@ -247,7 +247,7 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
 
             {error && <p className="text-red-400 text-xs font-medium text-center bg-red-900/20 p-2 rounded-lg leading-relaxed">{error}</p>}
 
-            <Button type="submit" disabled={loading} className="animated-glow-border w-full text-white h-12 rounded-xl mt-2 font-bold bg-transparent">
+            <Button type="submit" disabled={loading} className="w-full glow-btn-primary h-12 rounded-xl mt-2 font-bold text-[#0B0D1A]">
               {loading ? "..." : (isUpgrade ? "ثبت‌نام و انتقال داده‌ها" : isLogin ? t("login") : t("register"))}
             </Button>
           </form>
