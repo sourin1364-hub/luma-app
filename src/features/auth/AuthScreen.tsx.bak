@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../../store/useAuthStore";
+import { useAppStore } from "../../store/useAppStore";
 import {
   registerUser,
   loginUser,
@@ -29,12 +30,13 @@ function getErrorMessage(code: AuthErrorCode, isFa: boolean, fallbackMsg?: strin
   return messages[code][isFa ? "fa" : "en"];
 }
 
-export function AuthScreen() {
+export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
   const { t } = useTranslation();
   const isFa = true; // زبان برای همیشه فارسی قفل شد
   const setCurrentUser = useAuthStore((s) => s.setCurrentUser);
+  const setCurrentRoute = useAppStore((s) => s.setCurrentRoute);
 
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(!isUpgrade);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -60,7 +62,10 @@ export function AuthScreen() {
         setError(getErrorMessage(result.error!, isFa, result.errorMessage));
         return;
       }
-      if (result.user) setCurrentUser(result.user);
+      if (result.user) {
+        setCurrentUser(result.user);
+        if (isUpgrade) setCurrentRoute("home");
+      }
     } finally {
       setLoading(false);
     }
@@ -84,6 +89,11 @@ export function AuthScreen() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200 bg-[#0B0D1A]" dir="rtl">
+      {isUpgrade && (
+         <button onClick={() => setCurrentRoute("settings")} className="absolute top-6 right-6 text-sm text-[#D6B56D] font-bold hover:underline">
+           انصراف
+         </button>
+      )}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center mb-8 mt-8">
         <div className="flex items-center gap-4 text-[#D6B56D] drop-shadow-md mb-2">
           <Logo size={50} className="animate-[spin_25s_linear_infinite]" />
@@ -95,8 +105,14 @@ export function AuthScreen() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
         <div className="bg-[#17182B] border border-[#8B5CF6]/30 rounded-[2rem] w-full shadow-2xl p-8">
           <h2 className="text-2xl font-bold text-center text-[#D6B56D] mb-6">
-            {isLogin ? t("login") : t("register")}
+            {isUpgrade ? "ثبت‌نام و ارتقای حساب" : isLogin ? t("login") : t("register")}
           </h2>
+
+          {isUpgrade && (
+            <p className="text-center text-slate-400 text-xs mb-4 leading-relaxed">
+              با ثبت‌نام، تمام اطلاعات مهمان شما (XP، سطح و تاریخچه فال‌ها) به حساب جدید منتقل می‌شود.
+            </p>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
@@ -122,23 +138,25 @@ export function AuthScreen() {
             )}
 
             <Button type="submit" disabled={loading} className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white h-12 rounded-xl mt-2 font-bold">
-              {loading ? "..." : (isLogin ? t("login") : t("register"))}
+              {loading ? "..." : (isUpgrade ? "ثبت‌نام و انتقال داده‌ها" : isLogin ? t("login") : t("register"))}
             </Button>
           </form>
 
-          <div className="mt-6 flex flex-col gap-3 text-center text-sm">
-            <button type="button" onClick={toggleMode} className="text-[#D6B56D] hover:text-amber-400 font-medium">
-              {isLogin ? t("register") : t("login")}
-            </button>
-            <div className="flex items-center gap-2 text-slate-600">
-              <div className="h-px bg-slate-700 flex-1"></div>
-              <span>یا</span>
-              <div className="h-px bg-slate-700 flex-1"></div>
+          {!isUpgrade && (
+            <div className="mt-6 flex flex-col gap-3 text-center text-sm">
+              <button type="button" onClick={toggleMode} className="text-[#D6B56D] hover:text-amber-400 font-medium">
+                {isLogin ? t("register") : t("login")}
+              </button>
+              <div className="flex items-center gap-2 text-slate-600">
+                <div className="h-px bg-slate-700 flex-1"></div>
+                <span>یا</span>
+                <div className="h-px bg-slate-700 flex-1"></div>
+              </div>
+              <Button type="button" variant="outline" onClick={handleGuest} disabled={loading} className="w-full border-[#D6B56D]/30 text-[#D6B56D] hover:bg-[#D6B56D]/10 h-10 rounded-xl">
+                {t("guest")}
+              </Button>
             </div>
-            <Button type="button" variant="outline" onClick={handleGuest} disabled={loading} className="w-full border-[#D6B56D]/30 text-[#D6B56D] hover:bg-[#D6B56D]/10 h-10 rounded-xl">
-              {t("guest")}
-            </Button>
-          </div>
+          )}
         </div>
       </motion.div>
     </div>

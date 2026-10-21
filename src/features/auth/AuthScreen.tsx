@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useAppStore } from "../../store/useAppStore";
+import { supabase } from "../../lib/supabase";
 import {
   registerUser,
   loginUser,
@@ -16,7 +17,6 @@ import { motion } from "framer-motion";
 
 function getErrorMessage(code: AuthErrorCode, isFa: boolean, fallbackMsg?: string): string {
   if (fallbackMsg) return fallbackMsg;
-
   const messages: Record<AuthErrorCode, { fa: string; en: string }> = {
     EMPTY_FIELDS: { fa: "لطفاً همه فیلدها را پر کنید", en: "Please fill all fields" },
     USERNAME_TOO_SHORT: { fa: "شناسه کاربری باید حداقل 3 کاراکتر باشد", en: "Username must be at least 3 characters" },
@@ -32,7 +32,7 @@ function getErrorMessage(code: AuthErrorCode, isFa: boolean, fallbackMsg?: strin
 
 export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
   const { t } = useTranslation();
-  const isFa = true; // زبان برای همیشه فارسی قفل شد
+  const isFa = true;
   const setCurrentUser = useAuthStore((s) => s.setCurrentUser);
   const setCurrentRoute = useAppStore((s) => s.setCurrentRoute);
 
@@ -41,11 +41,25 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // حالت‌های جدید برای بازیابی رمز
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+
+  useEffect(() => {
+    // بررسی اینکه آیا کاربر از طریق لینک ایمیل بازیابی وارد شده است یا خیر
+    if (window.location.hash.includes("type=recovery")) {
+      setIsRecoveryMode(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
     if (!isLogin && password !== confirmPassword) {
       setError("رمز عبور و تأیید آن یکسان نیستند");
@@ -71,6 +85,53 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    if (!username.trim()) {
+      setError("لطفاً نام کاربری خود را وارد کنید");
+      return;
+    }
+
+    setLoading(true);
+    const email = `${username.trim()}@gmail.com`;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://sourin1364-hub.github.io/luma-app/'
+    });
+
+    if (error) {
+      setError(getErrorMessage("UNKNOWN_ERROR", isFa, error.message));
+    } else {
+      setSuccess("لینک بازیابی رمز عبور به ایمیل شما ارسال شد. لطفاً صندوق ورودی خود را بررسی کنید.");
+    }
+    setLoading(false);
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    if (newPassword.length < 8) {
+      setError("رمز عبور باید حداقل ۸ کاراکتر باشد");
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+    if (error) {
+      setError(getErrorMessage("UNKNOWN_ERROR", isFa, error.message));
+      setLoading(false);
+    } else {
+      setSuccess("رمز عبور با موفقیت تغییر کرد. در حال انتقال به برنامه...");
+      setTimeout(() => {
+        window.location.hash = "";
+        window.location.reload();
+      }, 2500);
+    }
+  };
+
   const handleGuest = async () => {
     setLoading(true);
     try {
@@ -84,15 +145,80 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
   const toggleMode = () => {
     setIsLogin(!isLogin);
     setError("");
+    setSuccess("");
     setConfirmPassword("");
   };
 
+  // صفحه تغییر رمز عبور (وقتی کاربر روی لینک ایمیل کلیک کرده است)
+  if (isRecoveryMode) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200 bg-[#0B0D1A]" dir="rtl">
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center mb-8 mt-8">
+          <div className="flex items-center gap-4 text-[#D6B56D] drop-shadow-md mb-2">
+            <Logo size={50} className="animate-[spin_25s_linear_infinite]" />
+            <h1 className="text-5xl font-logo font-bold tracking-[0.2em]">LUMA</h1>
+          </div>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
+          <div className="bg-[#17182B] border border-[#8B5CF6]/30 rounded-[2rem] w-full shadow-2xl p-8">
+            <h2 className="text-2xl font-bold text-center text-[#D6B56D] mb-6">تعیین رمز عبور جدید</h2>
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-slate-300">رمز عبور جدید</Label>
+                <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="حداقل ۸ کاراکتر" className="bg-[#0B0D1A] border-slate-700 text-white" />
+              </div>
+              {error && <p className="text-red-400 text-xs font-medium text-center bg-red-900/20 p-2 rounded-lg">{error}</p>}
+              {success && <p className="text-green-400 text-xs font-medium text-center bg-green-900/20 p-2 rounded-lg">{success}</p>}
+              <Button type="submit" disabled={loading} className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white h-12 rounded-xl mt-2 font-bold">
+                {loading ? "..." : "ذخیره رمز عبور جدید"}
+              </Button>
+            </form>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // صفحه فراموشی رمز عبور
+  if (isForgotPassword) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200 bg-[#0B0D1A]" dir="rtl">
+         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center mb-8 mt-8">
+          <div className="flex items-center gap-4 text-[#D6B56D] drop-shadow-md mb-2">
+            <Logo size={50} className="animate-[spin_25s_linear_infinite]" />
+            <h1 className="text-5xl font-logo font-bold tracking-[0.2em]">LUMA</h1>
+          </div>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
+          <div className="bg-[#17182B] border border-[#8B5CF6]/30 rounded-[2rem] w-full shadow-2xl p-8">
+            <h2 className="text-2xl font-bold text-center text-[#D6B56D] mb-6">فراموشی رمز عبور</h2>
+            <p className="text-center text-slate-400 text-xs mb-4">نام کاربری خود را وارد کنید تا لینک بازیابی برای شما ارسال شود.</p>
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-slate-300">شناسه کاربری</Label>
+                <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="مثلاً: ali_reza" className="bg-[#0B0D1A] border-slate-700 text-white" />
+              </div>
+              {error && <p className="text-red-400 text-xs font-medium text-center bg-red-900/20 p-2 rounded-lg">{error}</p>}
+              {success && <p className="text-green-400 text-xs font-medium text-center bg-green-900/20 p-2 rounded-lg">{success}</p>}
+              <Button type="submit" disabled={loading} className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white h-12 rounded-xl mt-2 font-bold">
+                {loading ? "..." : "ارسال لینک بازیابی"}
+              </Button>
+              <button type="button" onClick={() => setIsForgotPassword(false)} className="w-full text-center text-sm text-[#D6B56D] mt-2 hover:underline">
+                بازگشت به صفحه ورود
+              </button>
+            </form>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // صفحه ورود/ثبت‌نام اصلی
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200 bg-[#0B0D1A]" dir="rtl">
       {isUpgrade && (
-         <button onClick={() => setCurrentRoute("settings")} className="absolute top-6 right-6 text-sm text-[#D6B56D] font-bold hover:underline">
-           انصراف
-         </button>
+         <button onClick={() => setCurrentRoute("settings")} className="absolute top-6 right-6 text-sm text-[#D6B56D] font-bold hover:underline">انصراف</button>
       )}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center mb-8 mt-8">
         <div className="flex items-center gap-4 text-[#D6B56D] drop-shadow-md mb-2">
@@ -131,16 +257,20 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
               </div>
             )}
 
-            {error && (
-              <p className="text-red-400 text-xs font-medium text-center bg-red-900/20 p-2 rounded-lg leading-relaxed">
-                {error}
-              </p>
-            )}
+            {error && <p className="text-red-400 text-xs font-medium text-center bg-red-900/20 p-2 rounded-lg leading-relaxed">{error}</p>}
 
             <Button type="submit" disabled={loading} className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white h-12 rounded-xl mt-2 font-bold">
               {loading ? "..." : (isUpgrade ? "ثبت‌نام و انتقال داده‌ها" : isLogin ? t("login") : t("register"))}
             </Button>
           </form>
+
+          <div className="mt-4 flex flex-col gap-2 text-center text-sm">
+            {isLogin && !isUpgrade && (
+              <button type="button" onClick={() => setIsForgotPassword(true)} className="text-slate-400 hover:text-white transition-colors">
+                رمز عبور را فراموش کرده‌اید؟
+              </button>
+            )}
+          </div>
 
           {!isUpgrade && (
             <div className="mt-6 flex flex-col gap-3 text-center text-sm">

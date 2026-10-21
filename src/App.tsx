@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "./store/useAuthStore";
-import { useAppStore } from "./store/useAppStore";
 import { AuthScreen } from "./features/auth/AuthScreen";
 import { HomeScreen } from "./features/auth/HomeScreen";
 import { ProfileSetupScreen } from "./features/chart/ProfileSetupScreen";
@@ -9,23 +8,24 @@ import { type User } from "./db";
 
 function App() {
   const currentUser = useAuthStore((state) => state.currentUser);
-  const themeMode = useAppStore((state) => state.themeMode);
   const [loading, setLoading] = useState(true);
+  const [isRecovery, setIsRecovery] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute("lang", "fa");
     document.documentElement.setAttribute("dir", "rtl");
-    
-    // اعمال دائمی حالت تاریک برای تم لوکس
     document.documentElement.classList.add("dark");
-  }, [themeMode]);
 
-  useEffect(() => {
+    // بررسی اولیه برای حالت بازیابی رمز
+    if (window.location.hash.includes("type=recovery")) {
+      setIsRecovery(true);
+    }
+
     const checkUser = async (sessionUser: any) => {
       if (!sessionUser) return;
 
       const current = useAuthStore.getState().currentUser;
-      
+
       if (!navigator.onLine && current && current.id === sessionUser.id) {
         setLoading(false);
         return;
@@ -57,9 +57,9 @@ function App() {
             month: birthDataRecord.month,
             day: birthDataRecord.day,
             motherName: birthDataRecord.mother_name
-          } : current?.birthData 
+          } : current?.birthData
         };
-        
+
         useAuthStore.getState().setCurrentUser(user);
       } catch (error) {
         console.warn("Network error while fetching user data. Using offline data.", error);
@@ -69,6 +69,10 @@ function App() {
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // اگر رویداد بازیابی رمز رخ داد، کاربر را به صفحه تغییر رمز هدایت می‌کنیم
+      if (event === "PASSWORD_RECOVERY") {
+        setIsRecovery(true);
+      }
       if (session?.user) {
         checkUser(session.user);
       } else if (event === 'SIGNED_OUT') {
@@ -93,6 +97,11 @@ function App() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // نمایش صفحه تغییر رمز عبور (حتی اگر کاربر سشن داشته باشد)
+  if (isRecovery) {
+    return <AuthScreen />;
+  }
 
   if (loading) {
     return (
