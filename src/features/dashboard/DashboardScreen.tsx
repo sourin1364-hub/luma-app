@@ -48,7 +48,7 @@ export function DashboardScreen() {
   ] as const;
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-6 relative overflow-hidden text-slate-800 dark:text-slate-200" dir="rtl">
+    <div className="min-h-screen flex flex-col items-center p-6 relative overflow-hidden text-[var(--text-main)] dark:text-[var(--text-main)]" dir="rtl">
       
       <div className="relative z-20 max-w-md w-full space-y-6 py-6">
         
@@ -63,7 +63,7 @@ export function DashboardScreen() {
             <h2 className="text-2xl font-bold text-[rgb(var(--glow-color-rgb))] mb-1">
               {currentUser.isGuest ? "خوش آمدی، مهمان" : `خوش آمدی، ${displayName}`}
             </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">به دنیای درون خود قدم بگذارید</p>
+            <p className="text-sm text-slate-500 dark:text-[var(--text-muted)]">به دنیای درون خود قدم بگذارید</p>
           </div>
           
           <div className="pt-1">
@@ -79,7 +79,7 @@ export function DashboardScreen() {
               <Target className="w-5 h-5 text-[rgb(var(--glow-color-rgb))]" />
             </div>
             <div className="text-lg font-bold text-[rgb(var(--glow-color-rgb))]">{toFa(levelInfo.level)}</div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400">سطح</div>
+            <div className="text-[10px] text-slate-500 dark:text-[var(--text-muted)]">سطح</div>
           </div>
           
           <div className="glow-card rounded-2xl p-3 text-center">
@@ -87,7 +87,7 @@ export function DashboardScreen() {
               <Zap className="w-5 h-5 text-[rgb(var(--glow-color-rgb))]" />
             </div>
             <div className="text-lg font-bold text-[rgb(var(--glow-color-rgb))]">{toFa(levelInfo.totalXp)}</div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400">XP کل</div>
+            <div className="text-[10px] text-slate-500 dark:text-[var(--text-muted)]">XP کل</div>
           </div>
           
           <div className="glow-card rounded-2xl p-3 text-center">
@@ -95,7 +95,7 @@ export function DashboardScreen() {
               <Layers className="w-5 h-5 text-[rgb(var(--glow-color-rgb))]" />
             </div>
             <div className="text-lg font-bold text-[rgb(var(--glow-color-rgb))]">{toFa(readingsCount)}</div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400">فال‌ها</div>
+            <div className="text-[10px] text-slate-500 dark:text-[var(--text-muted)]">فال‌ها</div>
           </div>
 
           {/* کارت روزانه در قالب یک کادر کلیک‌پذیر */}
@@ -130,7 +130,7 @@ export function DashboardScreen() {
                 </div>
                 <div>
                   <h3 className="font-bold text-[rgb(var(--glow-color-rgb))] text-xs mb-0.5">{item.label}</h3>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">{item.desc}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-[var(--text-muted)] leading-tight">{item.desc}</p>
                 </div>
               </motion.button>
             ))}
@@ -154,11 +154,11 @@ export function DashboardScreen() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white/95 dark:bg-slate-900/95 rounded-[2rem] p-6 w-full max-w-sm shadow-2xl border border-[rgba(var(--glow-color-rgb),0.3)] relative max-h-[90vh] overflow-y-auto"
+              className="bg-[var(--bg-card)] rounded-[2rem] p-6 w-full max-w-sm shadow-2xl border border-[rgba(var(--glow-color-rgb),0.3)] relative max-h-[90vh] overflow-y-auto"
             >
               <button 
                 onClick={() => setShowDailyModal(false)}
-                className="absolute top-4 right-4 z-50 bg-black/10 dark:bg-white/10 text-slate-800 dark:text-white p-2 rounded-full hover:bg-black/20 transition-colors"
+                className="absolute top-4 right-4 z-50 bg-black/10 dark:bg-white/10 text-[var(--text-main)] dark:text-white p-2 rounded-full hover:bg-black/20 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>

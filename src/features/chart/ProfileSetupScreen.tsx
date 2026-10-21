@@ -95,70 +95,70 @@ export function ProfileSetupScreen() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden text-slate-800 dark:text-slate-200 bg-transparent" dir={isFa ? "rtl" : "ltr"}>
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden text-[var(--text-main)] dark:text-[var(--text-main)] bg-transparent" dir={isFa ? "rtl" : "ltr"}>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
         <div className="glow-card rounded-[2rem] p-8 shadow-2xl">
           <div className="glow-card-inner">
             <h2 className="text-2xl font-bold text-center text-[rgb(var(--glow-color-rgb))] mb-2">
               {isFa ? "تکمیل پروفایل" : "Complete Profile"}
             </h2>
-            <p className="text-center text-slate-400 text-sm mb-6">
+            <p className="text-center text-[var(--text-muted)] text-sm mb-6">
               {isFa ? "برای شخصی‌سازی چارت نجومی، لطفاً اطلاعات خود را وارد کنید" : "Enter your details to personalize your birth chart"}
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-slate-300">{isFa ? "نام و نام خانوادگی (نمایشی)" : "Display Name"}</Label>
+                <Label className="text-[var(--text-muted)]">{isFa ? "نام و نام خانوادگی (نمایشی)" : "Display Name"}</Label>
                 <Input
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder={isFa ? "مثلاً: آریان کاملایی" : "e.g., John Doe"}
-                  className="bg-transparent border-[rgba(var(--glow-color-rgb),0.3)] focus:border-[rgba(var(--glow-color-rgb),0.8)] text-slate-800 dark:text-white"
+                  className="bg-transparent border-[rgba(var(--glow-color-rgb),0.3)] focus:border-[rgba(var(--glow-color-rgb),0.8)] text-[var(--text-main)] dark:text-white"
                 />
               </div>
 
               <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1.5">
-                  <Label className="text-slate-300">{isFa ? "سال" : "Year"}</Label>
-                  <Input type="number" value={year} onChange={(e) => setYear(e.target.value)} placeholder="1370" className="bg-transparent border-[rgba(var(--glow-color-rgb),0.3)] text-center text-slate-800 dark:text-white" />
+                  <Label className="text-[var(--text-muted)]">{isFa ? "سال" : "Year"}</Label>
+                  <Input type="number" value={year} onChange={(e) => setYear(e.target.value)} placeholder="1370" className="bg-transparent border-[rgba(var(--glow-color-rgb),0.3)] text-center text-[var(--text-main)] dark:text-white" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-slate-300">{isFa ? "ماه" : "Month"}</Label>
-                  <Input type="number" value={month} onChange={(e) => setMonth(e.target.value)} placeholder="1" className="bg-transparent border-[rgba(var(--glow-color-rgb),0.3)] text-center text-slate-800 dark:text-white" />
+                  <Label className="text-[var(--text-muted)]">{isFa ? "ماه" : "Month"}</Label>
+                  <Input type="number" value={month} onChange={(e) => setMonth(e.target.value)} placeholder="1" className="bg-transparent border-[rgba(var(--glow-color-rgb),0.3)] text-center text-[var(--text-main)] dark:text-white" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-slate-300">{isFa ? "روز" : "Day"}</Label>
-                  <Input type="number" value={day} onChange={(e) => setDay(e.target.value)} placeholder="1" className="bg-transparent border-[rgba(var(--glow-color-rgb),0.3)] text-center text-slate-800 dark:text-white" />
+                  <Label className="text-[var(--text-muted)]">{isFa ? "روز" : "Day"}</Label>
+                  <Input type="number" value={day} onChange={(e) => setDay(e.target.value)} placeholder="1" className="bg-transparent border-[rgba(var(--glow-color-rgb),0.3)] text-center text-[var(--text-main)] dark:text-white" />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-slate-300">{isFa ? "ساعت تولد" : "Time of Birth"}</Label>
+                <Label className="text-[var(--text-muted)]">{isFa ? "ساعت تولد" : "Time of Birth"}</Label>
                 <Input
                   value={birthTime}
                   onChange={(e) => setBirthTime(e.target.value)}
                   placeholder={isFa ? "مثلاً: 14:30" : "e.g., 14:30"}
-                  className="bg-transparent border-[rgba(var(--glow-color-rgb),0.3)] text-slate-800 dark:text-white"
+                  className="bg-transparent border-[rgba(var(--glow-color-rgb),0.3)] text-[var(--text-main)] dark:text-white"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-slate-300">{isFa ? "محل تولد" : "Place of Birth"}</Label>
+                <Label className="text-[var(--text-muted)]">{isFa ? "محل تولد" : "Place of Birth"}</Label>
                 <Input
                   value={birthPlace}
                   onChange={(e) => setBirthPlace(e.target.value)}
                   placeholder={isFa ? "مثلاً: تهران" : "e.g., Tehran"}
-                  className="bg-transparent border-[rgba(var(--glow-color-rgb),0.3)] text-slate-800 dark:text-white"
+                  className="bg-transparent border-[rgba(var(--glow-color-rgb),0.3)] text-[var(--text-main)] dark:text-white"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-slate-300">{isFa ? "نام مادر" : "Mother's Name"}</Label>
+                <Label className="text-[var(--text-muted)]">{isFa ? "نام مادر" : "Mother's Name"}</Label>
                 <Input
                   value={motherName}
                   onChange={(e) => setMotherName(e.target.value)}
                   placeholder={isFa ? "برای محاسبات عددی و تاروت" : "For numerology and tarot"}
-                  className="bg-transparent border-[rgba(var(--glow-color-rgb),0.3)] text-slate-800 dark:text-white"
+                  className="bg-transparent border-[rgba(var(--glow-color-rgb),0.3)] text-[var(--text-main)] dark:text-white"
                 />
               </div>
 

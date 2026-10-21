@@ -13,7 +13,7 @@ export function SplashScreen({ onFinish }: { onFinish: () => void }) {
       initial={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.05 }}
       transition={{ duration: 0.8, ease: "easeInOut" }}
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#0B0D1A] overflow-hidden"
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--bg-main)] overflow-hidden"
     >
       {/* افکت نور پس‌زمینه */}
       <motion.div
@@ -50,7 +50,7 @@ export function SplashScreen({ onFinish }: { onFinish: () => void }) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 1 }}
-          className="text-lg text-slate-300 font-light tracking-widest"
+          className="text-lg text-[var(--text-muted)] font-light tracking-widest"
         >
           سفری به دنیای درون
         </motion.p>

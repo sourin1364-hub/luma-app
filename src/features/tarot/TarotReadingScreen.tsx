@@ -56,7 +56,7 @@ const ShuffleAnimation = () => {
     <div className="relative w-full max-w-lg h-[350px] flex items-center justify-center">
       <div className="flex gap-4 md:gap-8">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="w-24 h-36 md:w-32 md:h-48 rounded-xl border-2 border-amber-500/30 bg-[#0B0D1A] relative shadow-inner">
+          <div key={i} className="w-24 h-36 md:w-32 md:h-48 rounded-xl border-2 border-amber-500/30 bg-[var(--bg-main)] relative shadow-inner">
              <img src={images['../../assets/cards/back.webp']} alt="Back" className="w-full h-full object-cover rounded-xl opacity-30" />
           </div>
         ))}
@@ -184,7 +184,7 @@ export function TarotReadingScreen() {
 
   if (!selectedSpread) {
     return (
-      <div className="min-h-screen flex flex-col items-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200" dir="rtl">
+      <div className="min-h-screen flex flex-col items-center p-4 sm:p-6 relative overflow-x-hidden text-[var(--text-main)]" dir="rtl">
         <PageHeader title="انتخاب نوع فال" icon={<Sparkles className="w-5 h-5 text-amber-500" />} onBack={() => setCurrentRoute("tarot_menu")} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full max-w-4xl relative z-10">
@@ -201,7 +201,7 @@ export function TarotReadingScreen() {
               </div>
               <div>
                 <h3 className="font-bold text-[rgb(var(--glow-color-rgb))] text-lg sm:text-xl mb-1">{spread.title}</h3>
-                <p className="text-xs sm:text-sm text-slate-400">{spread.desc}</p>
+                <p className="text-xs sm:text-sm text-[var(--text-muted)]">{spread.desc}</p>
               </div>
             </motion.button>
           ))}
@@ -211,7 +211,7 @@ export function TarotReadingScreen() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200" dir="rtl">
+    <div className="min-h-screen flex flex-col items-center p-4 sm:p-6 relative overflow-x-hidden text-[var(--text-main)]" dir="rtl">
       <PageHeader title={activeSpreadConfig?.title || ""} icon={<Sparkles className="w-5 h-5 text-amber-500" />} onBack={() => { setSelectedSpread(null); setDrawnCards([]); setRevealed([]); }} />
 
       {drawnCards.length === 0 && !isShuffling ? (
@@ -306,7 +306,7 @@ export function TarotReadingScreen() {
                         <span className="font-medium animate-pulse">لوما در حال تحلیل عناصر و انرژی کارت‌هاست...</span>
                       </div>
                     ) : (
-                      <div className="text-sm sm:text-base text-slate-300 leading-loose font-medium text-justify text-right whitespace-pre-wrap" dir="rtl">
+                      <div className="text-sm sm:text-base text-[var(--text-muted)] leading-loose font-medium text-justify text-right whitespace-pre-wrap" dir="rtl">
                         {generateTarotSynthesis(drawnCards, selectedSpread)}
                       </div>
                     )}
@@ -315,16 +315,16 @@ export function TarotReadingScreen() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {drawnCards.map((drawn, index) => (
-                    <Card key={index} className="bg-[#17182B] border-white/10 shadow-sm rounded-2xl flex flex-col">
+                    <Card key={index} className="bg-[var(--bg-card)] border-white/10 shadow-sm rounded-2xl flex flex-col">
                       <CardHeader>
                         <p className="text-xs font-bold text-amber-500 mb-1">{activeSpreadConfig?.positions[index]}</p>
                         <CardTitle className="text-center text-lg text-[#D6B56D]">
                           {drawn.card.nameFa} {drawn.isReversed && <span className="text-xs text-red-500">(معکوس)</span>}
                         </CardTitle>
-                        <p className="text-center text-xs text-slate-400 tracking-widest">{drawn.card.name}</p>
+                        <p className="text-center text-xs text-[var(--text-muted)] tracking-widest">{drawn.card.name}</p>
                       </CardHeader>
                       <CardContent className="flex-1">
-                        <p className="text-sm leading-relaxed text-justify text-slate-300 font-medium">
+                        <p className="text-sm leading-relaxed text-justify text-[var(--text-muted)] font-medium">
                           {getCardMeaning(drawn.card.id, drawn.isReversed)}
                         </p>
                       </CardContent>
