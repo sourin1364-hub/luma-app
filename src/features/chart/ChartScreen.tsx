@@ -9,8 +9,8 @@ import { Logo } from "../../components/ui/Logo";
 import { LevelBadge } from "../gamification/LevelBadge";
 import { Droplets, Flame, Mountain, Wind, Route, Clover, Gem, Hash, Settings, Home } from "lucide-react";
 
-const zodiacIcons = import.meta.glob('../../assets/icons/zodiac/*.{svg,png}', { eager: true, import: 'default' }) as Record<string, string>;
-const chineseIcons = import.meta.glob('../../assets/icons/chinese/*.{svg,png}', { eager: true, import: 'default' }) as Record<string, string>;
+const zodiacIcons = import.meta.glob('../../assets/icons/zodiac/*.{svg,png,webp}', { eager: true, import: 'default' }) as Record<string, string>;
+const chineseIcons = import.meta.glob('../../assets/icons/chinese/*.{svg,png,webp}', { eager: true, import: 'default' }) as Record<string, string>;
 
 const findIcon = (icons: Record<string, string>, name: string) => {
   const key = Object.keys(icons).find(k => k.toLowerCase().includes(`/${name.toLowerCase()}.`));
