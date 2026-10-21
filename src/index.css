@@ -94,3 +94,35 @@
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(var(--glow-color-rgb), 0.3); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(var(--glow-color-rgb), 0.6); }
+/* استروک طلایی انیمیشنی (چرخشی) */
+@keyframes spin-border {
+  100% { transform: rotate(360deg); }
+}
+
+.animated-glow-border {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--bg-card);
+  z-index: 1;
+  border: none !important;
+}
+
+.animated-glow-border::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: conic-gradient(transparent 0%, rgba(var(--glow-color-rgb), 1) 20%, transparent 40%);
+  animation: spin-border 4s linear infinite;
+  z-index: -2;
+}
+
+.animated-glow-border::after {
+  content: '';
+  position: absolute;
+  inset: 1.5px; /* ضخامت استروک */
+  background: var(--bg-main); /* رنگ داخلی */
+  border-radius: 10px;
+  z-index: -1;
+}

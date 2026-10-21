@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "./store/useAuthStore";
+import { useAppStore } from "./store/useAppStore";
 import { AuthScreen } from "./features/auth/AuthScreen";
 import { SplashScreen } from "./components/SplashScreen";
 
@@ -13,12 +14,15 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [isRecovery, setIsRecovery] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const themeMode = useAppStore((state) => state.themeMode);
 
 
   useEffect(() => {
+    if (themeMode === "dark") document.documentElement.classList.add("dark");
+    else document.documentElement.classList.remove("dark");
     document.documentElement.setAttribute("lang", "fa");
     document.documentElement.setAttribute("dir", "rtl");
-    document.documentElement.classList.add("dark");
+    
 
     // بررسی اولیه برای حالت بازیابی رمز
     if (window.location.hash.includes("type=recovery")) {

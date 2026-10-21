@@ -62,7 +62,7 @@ export function TarotGalleryScreen() {
             className="cursor-pointer flex flex-col items-center gap-2"
           >
             <div className="w-full aspect-[2/3] rounded-xl overflow-hidden border-2 border-white/10 hover:border-[rgba(var(--glow-color-rgb),0.8)] shadow-md transition-colors">
-              <img src={images[`../../assets/cards/${card.fileName}`]} alt={card.name} className="w-full h-full object-cover" />
+              <img src={images[`../../assets/cards/${card.fileName}`]} alt={card.name} className="max-h-[40vh] w-auto object-contain mx-auto rounded-xl" />
             </div>
             <span className="text-xs sm:text-sm font-bold text-center text-[rgb(var(--glow-color-rgb))]">{card.nameFa}</span>
           </motion.div>
@@ -94,7 +94,7 @@ export function TarotGalleryScreen() {
 
               <div className="flex justify-center mt-6 mb-4">
                 <div className="w-[160px] h-[240px] sm:w-[200px] sm:h-[300px] shrink-0 rounded-xl overflow-hidden border-2 shadow-lg" style={{ borderColor: "rgba(var(--glow-color-rgb), 0.5)" }}>
-                  <img src={images[`../../assets/cards/${selectedCard.fileName}`]} alt={selectedCard.name} className="w-full h-full object-cover" />
+                  <img src={images[`../../assets/cards/${selectedCard.fileName}`]} alt={selectedCard.name} className="max-h-[40vh] w-auto object-contain mx-auto rounded-xl" />
                 </div>
               </div>
 

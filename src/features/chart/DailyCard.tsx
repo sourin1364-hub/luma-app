@@ -106,7 +106,7 @@ export function DailyCard() {
             className="absolute inset-0 rounded-xl border-[3px] transition-all duration-300 overflow-hidden"
             style={{ ...cardBorderStyle, backfaceVisibility: "hidden", zIndex: 2 }}
           >
-            {backImage && <img src={backImage} alt="Back" className="w-full h-full object-cover" />}
+            {backImage && <img src={backImage} alt="Back" className="max-h-[40vh] w-auto object-contain mx-auto rounded-xl" />}
             {!isFlipped && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <span className="bg-white/90 text-[rgb(var(--glow-color-rgb))] text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
@@ -120,7 +120,7 @@ export function DailyCard() {
             className="absolute inset-0 rounded-xl border-[3px] transition-all duration-300 overflow-hidden"
             style={{ ...cardBorderStyle, backfaceVisibility: "hidden", transform: "rotateY(180deg)", zIndex: 1 }}
           >
-            <img src={frontImage} alt={card.name} className="w-full h-full object-cover" />
+            <img src={frontImage} alt={card.name} className="max-h-[40vh] w-auto object-contain mx-auto rounded-xl" />
           </div>
         </motion.div>
 

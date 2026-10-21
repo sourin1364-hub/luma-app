@@ -77,7 +77,7 @@ const ShuffleAnimation = () => {
             animate={{ x: xOffset, y: yOffset, rotate: rotation, opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: i * 0.1, ease: "easeOut" }}
           >
-            <img src={images['../../assets/cards/back.webp']} alt="Back" className="w-full h-full object-cover" />
+            <img src={images['../../assets/cards/back.webp']} alt="Back" className="max-h-[40vh] w-auto object-contain mx-auto rounded-xl" />
           </motion.div>
         );
       })}
@@ -222,10 +222,10 @@ export function TarotReadingScreen() {
             className="w-48 h-72 sm:w-56 sm:h-96 rounded-xl overflow-hidden border-[3px] transition-all duration-300"
             style={cardBorderStyle}
           >
-            <img src={images['../../assets/cards/back.webp']} alt="Back" className="w-full h-full object-cover" />
+            <img src={images['../../assets/cards/back.webp']} alt="Back" className="max-h-[40vh] w-auto object-contain mx-auto rounded-xl" />
           </motion.div>
 
-          <button onClick={startReading} className="glow-btn w-full max-w-xs h-16 transition-transform hover:scale-[1.02] active:scale-95 group shadow-lg">
+          <button onClick={startReading} className="animated-glow-border glow-btn w-full max-w-xs h-16 transition-transform hover:scale-[1.02] active:scale-95 group shadow-lg">
             <div className="glow-btn-inner w-full h-full flex items-center justify-center gap-2 text-lg font-bold tracking-widest text-[#0B0D1A] group-hover:text-amber-900 transition-colors">
               <Sparkles className="w-5 h-5" />
               شروع فال
@@ -262,7 +262,7 @@ export function TarotReadingScreen() {
                       className="absolute inset-0 rounded-xl overflow-hidden border-[3px] transition-all duration-300"
                       style={{ ...cardBorderStyle, backfaceVisibility: "hidden", zIndex: 2 }}
                     >
-                      <img src={images['../../assets/cards/back.webp']} alt="Back" className="w-full h-full object-cover" />
+                      <img src={images['../../assets/cards/back.webp']} alt="Back" className="max-h-[40vh] w-auto object-contain mx-auto rounded-xl" />
                     </div>
 
                     <div
@@ -333,7 +333,7 @@ export function TarotReadingScreen() {
                 </div>
 
                 <div className="flex justify-center pt-8 pb-10">
-                  <button onClick={() => { setDrawnCards([]); setRevealed([]); }} className="glow-btn w-48 h-12 transition-transform hover:scale-[1.02] active:scale-95 group shadow-md">
+                  <button onClick={() => { setDrawnCards([]); setRevealed([]); }} className="animated-glow-border glow-btn w-48 h-12 transition-transform hover:scale-[1.02] active:scale-95 group shadow-md">
                     <div className="glow-btn-inner w-full h-full flex items-center justify-center text-sm font-bold text-[#0B0D1A] group-hover:text-amber-900 transition-colors">
                       فال مجدد
                     </div>
