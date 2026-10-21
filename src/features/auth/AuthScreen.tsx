@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useAppStore } from "../../store/useAppStore";
@@ -44,15 +44,17 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // حالت‌های جدید برای بازیابی رمز با سوال امنیتی
   const [isForgotPassword, setIsForgotPassword] = useState(false);
-  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+
+  
+  // فیلدهای بازیابی
+  const [recYear, setRecYear] = useState("");
+  const [recMonth, setRecMonth] = useState("");
+  const [recDay, setRecDay] = useState("");
+  const [recMotherName, setRecMotherName] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
-  useEffect(() => {
-    if (window.location.hash.includes("type=recovery")) {
-      setIsRecoveryMode(true);
-    }
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,51 +85,46 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
     }
   };
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
+  const handleSecurityReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess("");
-    if (!username.trim()) {
-      setError("لطفاً نام کاربری خود را وارد کنید");
+
+    if (!username.trim() || !recYear || !recMonth || !recDay || !recMotherName.trim() || !newPassword) {
+      setError("لطفاً همه فیلدها را پر کنید");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setError("رمز عبور جدید باید حداقل ۸ کاراکتر باشد");
       return;
     }
 
     setLoading(true);
-    const email = `${username.trim()}@gmail.com`;
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://sourin1364-hub.github.io/luma-app/'
+    
+    // فراخوانی تابع امن در Supabase
+    const { data, error } = await supabase.rpc('reset_password_with_security_questions', {
+      p_username: username.trim(),
+      p_year: Number(recYear),
+      p_month: Number(recMonth),
+      p_day: Number(recDay),
+      p_mother_name: recMotherName.trim(),
+      p_new_password: newPassword
     });
 
     if (error) {
-      setError(getErrorMessage("UNKNOWN_ERROR", isFa, error.message));
+      setError("خطا در ارتباط با سرور: " + error.message);
+    } else if (data === true) {
+      setSuccess("اطلاعات صحیح است. رمز عبور با موفقیت تغییر کرد. حالا می‌توانید وارد شوید.");
+      setTimeout(() => {
+        setIsForgotPassword(false);
+        setPassword("");
+        setSuccess("");
+      }, 3000);
     } else {
-      setSuccess("لینک بازیابی رمز عبور به ایمیل شما ارسال شد. لطفاً صندوق ورودی خود را بررسی کنید.");
+      setError("اطلاعات وارد شده (تاریخ تولد یا نام مادر) با سوابق مطابقت ندارد.");
     }
     setLoading(false);
-  };
-
-  const handleUpdatePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    if (newPassword.length < 8) {
-      setError("رمز عبور باید حداقل ۸ کاراکتر باشد");
-      return;
-    }
-
-    setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-
-    if (error) {
-      setError(getErrorMessage("UNKNOWN_ERROR", isFa, error.message));
-      setLoading(false);
-    } else {
-      setSuccess("رمز عبور با موفقیت تغییر کرد. در حال انتقال به برنامه...");
-      setTimeout(() => {
-        window.location.hash = "";
-        window.location.reload();
-      }, 2500);
-    }
   };
 
   const handleGuest = async () => {
@@ -147,7 +144,8 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
     setConfirmPassword("");
   };
 
-  if (isRecoveryMode) {
+  // صفحه بازیابی رمز با سوال امنیتی
+  if (isForgotPassword) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200 bg-[#0B0D1A]" dir="rtl">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center mb-8 mt-8">
@@ -156,51 +154,51 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
             <h1 className="text-5xl font-logo font-bold tracking-[0.2em]">LUMA</h1>
           </div>
         </motion.div>
-
+        
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
           <div className="bg-[#17182B] border border-[#8B5CF6]/30 rounded-[2rem] w-full shadow-2xl p-8">
-            <h2 className="text-2xl font-bold text-center text-[#D6B56D] mb-6">تعیین رمز عبور جدید</h2>
-            <form onSubmit={handleUpdatePassword} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label className="text-slate-300">رمز عبور جدید</Label>
-                <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="حداقل ۸ کاراکتر" className="bg-[#0B0D1A] border-slate-700 text-white" />
+            <h2 className="text-xl font-bold text-center text-[#D6B56D] mb-4">بازیابی رمز عبور</h2>
+            <p className="text-center text-slate-400 text-xs mb-6">برای امنیت حساب، اطلاعات اصلی خود را وارد کنید.</p>
+            
+            <form onSubmit={handleSecurityReset} className="space-y-3">
+              <div className="space-y-1">
+                <Label className="text-slate-300 text-xs">شناسه کاربری</Label>
+                <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="مثلاً: ali_reza" className="bg-[#0B0D1A] border-slate-700 text-white h-10 text-sm" />
               </div>
-              {error && <p className="text-red-400 text-xs font-medium text-center bg-red-900/20 p-2 rounded-lg">{error}</p>}
-              {success && <p className="text-green-400 text-xs font-medium text-center bg-green-900/20 p-2 rounded-lg">{success}</p>}
-              <Button type="submit" disabled={loading} className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white h-12 rounded-xl mt-2 font-bold">
-                {loading ? "..." : "ذخیره رمز عبور جدید"}
-              </Button>
-            </form>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
-  if (isForgotPassword) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200 bg-[#0B0D1A]" dir="rtl">
-         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center mb-8 mt-8">
-          <div className="flex items-center gap-4 text-[#D6B56D] drop-shadow-md mb-2">
-            <Logo size={50} className="animate-[spin_25s_linear_infinite]" />
-            <h1 className="text-5xl font-logo font-bold tracking-[0.2em]">LUMA</h1>
-          </div>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
-          <div className="bg-[#17182B] border border-[#8B5CF6]/30 rounded-[2rem] w-full shadow-2xl p-8">
-            <h2 className="text-2xl font-bold text-center text-[#D6B56D] mb-6">فراموشی رمز عبور</h2>
-            <p className="text-center text-slate-400 text-xs mb-4">نام کاربری خود را وارد کنید تا لینک بازیابی برای شما ارسال شود.</p>
-            <form onSubmit={handleForgotPassword} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label className="text-slate-300">شناسه کاربری</Label>
-                <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="مثلاً: ali_reza" className="bg-[#0B0D1A] border-slate-700 text-white" />
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-slate-300 text-xs">سال تولد</Label>
+                  <Input type="number" value={recYear} onChange={(e) => setRecYear(e.target.value)} placeholder="1370" className="bg-[#0B0D1A] border-slate-700 text-white text-center h-10 text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-slate-300 text-xs">ماه</Label>
+                  <Input type="number" value={recMonth} onChange={(e) => setRecMonth(e.target.value)} placeholder="1" className="bg-[#0B0D1A] border-slate-700 text-white text-center h-10 text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-slate-300 text-xs">روز</Label>
+                  <Input type="number" value={recDay} onChange={(e) => setRecDay(e.target.value)} placeholder="1" className="bg-[#0B0D1A] border-slate-700 text-white text-center h-10 text-sm" />
+                </div>
               </div>
-              {error && <p className="text-red-400 text-xs font-medium text-center bg-red-900/20 p-2 rounded-lg">{error}</p>}
-              {success && <p className="text-green-400 text-xs font-medium text-center bg-green-900/20 p-2 rounded-lg">{success}</p>}
-              <Button type="submit" disabled={loading} className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white h-12 rounded-xl mt-2 font-bold">
-                {loading ? "..." : "ارسال لینک بازیابی"}
+
+              <div className="space-y-1">
+                <Label className="text-slate-300 text-xs">نام مادر</Label>
+                <Input value={recMotherName} onChange={(e) => setRecMotherName(e.target.value)} placeholder="نام مادر خود را وارد کنید" className="bg-[#0B0D1A] border-slate-700 text-white h-10 text-sm" />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-slate-300 text-xs">رمز عبور جدید</Label>
+                <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="حداقل ۸ کاراکتر" className="bg-[#0B0D1A] border-slate-700 text-white h-10 text-sm" />
+              </div>
+
+              {error && <p className="text-red-400 text-xs text-center bg-red-900/20 p-2 rounded-lg leading-relaxed">{error}</p>}
+              {success && <p className="text-green-400 text-xs text-center bg-green-900/20 p-2 rounded-lg leading-relaxed">{success}</p>}
+
+              <Button type="submit" disabled={loading} className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white h-10 rounded-xl mt-2 font-bold text-sm">
+                {loading ? "..." : "تغییر رمز عبور"}
               </Button>
-              <button type="button" onClick={() => setIsForgotPassword(false)} className="w-full text-center text-sm text-[#D6B56D] mt-2 hover:underline">
+              
+              <button type="button" onClick={() => setIsForgotPassword(false)} className="w-full text-center text-xs text-[#D6B56D] mt-2 hover:underline">
                 بازگشت به صفحه ورود
               </button>
             </form>
@@ -210,6 +208,7 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
     );
   }
 
+  // صفحه ورود/ثبت‌نام اصلی
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200 bg-[#0B0D1A]" dir="rtl">
       {isUpgrade && (
@@ -221,8 +220,6 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
           <h1 className="text-5xl font-logo font-bold tracking-[0.2em]">LUMA</h1>
         </div>
         <p className="text-[#8B5CF6] font-medium">به دنیای درون خود خوش آمدید</p>
-        {/* این خط برای تست است تا مطمئن شویم نسخه جدید لود شده است */}
-        <p className="text-xs text-slate-500 mt-2">نسخه: v1.3 (Password Recovery)</p>
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
@@ -233,7 +230,7 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
 
           {isUpgrade && (
             <p className="text-center text-slate-400 text-xs mb-4 leading-relaxed">
-              با ثبت‌نام، تمام اطلاعات مهمان شما (XP، سطح و تاریخچه فال‌ها) به حساب جدید منتقل می‌شود.
+              با ثبت‌نام، تمام اطلاعات مهمان شما به حساب جدید منتقل می‌شود.
             </p>
           )}
 
