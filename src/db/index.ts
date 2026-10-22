@@ -10,7 +10,7 @@ export interface BirthData {
 }
 
 export interface User {
-  id: string;
+  id?: string | number;
   username: string;
   isGuest: boolean;
   createdAt: number;
@@ -20,7 +20,7 @@ export interface User {
 export interface Reading {
   id?: number;
   uuid: string;
-  userId: string;
+  userId: string | number;
   type: string;
   cards: number[];
   interpretation: string;
@@ -31,7 +31,7 @@ export interface Reading {
 export interface DailyDraw {
   id?: number;
   uuid: string;
-  userId: string;
+  userId: string | number;
   dateStr: string;
   cardId: number;
   createdAt: number;
@@ -39,7 +39,7 @@ export interface DailyDraw {
 }
 
 export interface Progress {
-  userId: string;
+  userId: string | number;
   level: number;
   xp: number;
 }
@@ -48,7 +48,7 @@ export class LumaDB extends Dexie {
   users!: Table<User, number>;
   readings!: Table<Reading, number>;
   dailyDraws!: Table<DailyDraw, number>;
-  progress!: Table<Progress, string>;
+  progress!: Table<Progress, string | number>;
 
   constructor() {
     super("LumaDatabase");
