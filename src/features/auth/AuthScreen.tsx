@@ -345,3 +345,5 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
     </div>
   );
 }
+
+// fix-applied-v2
