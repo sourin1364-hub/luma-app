@@ -18,13 +18,15 @@ function getErrorMessage(code: AuthErrorCode, isFa: boolean, fallbackMsg?: strin
   if (fallbackMsg) return fallbackMsg;
   const messages: Record<AuthErrorCode, { fa: string; en: string }> = {
     EMPTY_FIELDS: { fa: "لطفاً همه فیلدها را پر کنید", en: "Please fill all fields" },
-    USERNAME_TOO_SHORT: { fa: "شناسه کاربری باید حداقل 3 کاراکتر باشد", en: "Username must be at least 3 characters" },
-    PASSWORD_TOO_SHORT: { fa: "رمز عبور باید حداقل 8 کاراکتر باشد", en: "Password must be at least 8 characters" },
-    USER_LIMIT: { fa: "حداکثر 10 کاربر مجاز است", en: "Maximum 10 users allowed" },
-    USERNAME_TAKEN: { fa: "این شناسه کاربری قبلاً گرفته شده است", en: "Username already taken" },
+    USERNAME_TOO_SHORT: { fa: "نام کاربری باید حداقل ۲ کاراکتر باشد", en: "Username must be at least 2 characters" },
+    PASSWORD_TOO_SHORT: { fa: "رمز عبور باید حداقل ۶ کاراکتر باشد", en: "Password must be at least 6 characters" },
+    USER_LIMIT: { fa: "حداکثر ۱۰ کاربر مجاز است", en: "Maximum 10 users allowed" },
+    USERNAME_TAKEN: { fa: "این نام کاربری قبلاً گرفته شده است", en: "Username already taken" },
     INVALID_CREDENTIALS: { fa: "نام کاربری یا رمز عبور اشتباه است", en: "Invalid username or password" },
     UNKNOWN_ERROR: { fa: "خطای ناشناخته رخ داد", en: "An unknown error occurred" },
-    INVALID_USERNAME_FORMAT: { fa: "شناسه کاربری فقط می‌تواند شامل حروف انگلیسی، اعداد و زیرخط (_) باشد", en: "Username can only contain English letters, numbers, and underscores" },
+    INVALID_USERNAME_FORMAT: { fa: "نام کاربری فقط می‌تواند شامل حروف فارسی/لاتین، اعداد و زیرخط (_) باشد", en: "Username can only contain Persian/Latin letters, numbers, and underscores" },
+    EMAIL_NOT_CONFIRMED: { fa: "ایمیل تأیید نشده است", en: "Email not confirmed" },
+    NETWORK_ERROR: { fa: "خطای شبکه", en: "Network error" },
   };
   return messages[code][isFa ? "fa" : "en"];
 }
@@ -37,6 +39,7 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
 
   const [isLogin, setIsLogin] = useState(!isUpgrade);
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -44,7 +47,7 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
   const [loading, setLoading] = useState(false);
 
   const [isForgotPassword, setIsForgotPassword] = useState(false);
-  
+
   const [recYear, setRecYear] = useState("");
   const [recMonth, setRecMonth] = useState("");
   const [recDay, setRecDay] = useState("");
@@ -65,7 +68,7 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
     try {
       const result = isLogin
         ? await loginUser(username, password)
-        : await registerUser(username, password);
+        : await registerUser(username, email, password);
 
       if (!result.success) {
         setError(getErrorMessage(result.error!, isFa, result.errorMessage));
@@ -96,7 +99,7 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
     }
 
     setLoading(true);
-    
+
     const { data, error } = await supabase.rpc('reset_password_with_security_questions', {
       p_username: username.trim(),
       p_year: Number(recYear),
@@ -140,140 +143,194 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
 
   if (isForgotPassword) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200 bg-[var(--bg-main)]" dir="rtl">
+      <div className="min-h-screen w-full flex items-center justify-center bg-[var(--bg-main)] px-4">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center mb-8 mt-8">
-          <div className="flex items-center gap-4 text-[#D6B56D] drop-shadow-md mb-2">
-            <Logo size={50} className="animate-[spin_25s_linear_infinite]" />
-            <h1 className="text-5xl font-logo font-bold tracking-[0.2em]">LUMA</h1>
-          </div>
+          <Logo size="lg" />
+          <h1 className="text-3xl font-bold text-[var(--text-main)] mt-4">LUMA</h1>
         </motion.div>
-        
+
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
-          <div className="bg-[var(--bg-card)] border border-[var(--border-gold)] rounded-[2rem] w-full shadow-2xl p-8">
-            <h2 className="text-xl font-bold text-center text-[#D6B56D] mb-4">بازیابی رمز عبور</h2>
-            <p className="text-center text-slate-400 text-xs mb-6">برای امنیت حساب، اطلاعات اصلی خود را وارد کنید.</p>
-            
-            <form onSubmit={handleSecurityReset} className="space-y-3">
-              <div className="space-y-1">
-                <Label className="text-slate-300 text-xs">شناسه کاربری</Label>
-                <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="مثلاً: ali_reza" className="w-full h-10 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-3 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 transition-all" />
+          <h2 className="text-xl font-bold text-[var(--text-main)] mb-4 text-center">بازیابی رمز عبور</h2>
+          <p className="text-sm text-[var(--text-muted)] mb-6 text-center">برای امنیت حساب، اطلاعات اصلی خود را وارد کنید.</p>
+
+          <form onSubmit={handleSecurityReset} className="space-y-4">
+            <div>
+              <Label>شناسه کاربری</Label>
+              <input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="مثلاً: ali_reza"
+                className="w-full h-10 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-3 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 transition-all"
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <Label>سال تولد</Label>
+                <input
+                  value={recYear}
+                  onChange={(e) => setRecYear(e.target.value)}
+                  placeholder="1370"
+                  className="w-full h-10 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-3 text-sm text-center text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 transition-all"
+                />
               </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div className="space-y-1">
-                  <Label className="text-slate-300 text-xs">سال تولد</Label>
-                  <input type="number" value={recYear} onChange={(e) => setRecYear(e.target.value)} placeholder="1370" className="w-full h-10 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-3 text-sm text-center text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 transition-all" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-slate-300 text-xs">ماه</Label>
-                  <input type="number" value={recMonth} onChange={(e) => setRecMonth(e.target.value)} placeholder="1" className="w-full h-10 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-3 text-sm text-center text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 transition-all" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-slate-300 text-xs">روز</Label>
-                  <input type="number" value={recDay} onChange={(e) => setRecDay(e.target.value)} placeholder="1" className="w-full h-10 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-3 text-sm text-center text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 transition-all" />
-                </div>
+              <div>
+                <Label>ماه</Label>
+                <input
+                  value={recMonth}
+                  onChange={(e) => setRecMonth(e.target.value)}
+                  placeholder="1"
+                  className="w-full h-10 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-3 text-sm text-center text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 transition-all"
+                />
               </div>
-
-              <div className="space-y-1">
-                <Label className="text-slate-300 text-xs">نام مادر</Label>
-                <input value={recMotherName} onChange={(e) => setRecMotherName(e.target.value)} placeholder="نام مادر خود را وارد کنید" className="w-full h-10 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-3 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 transition-all" />
+              <div>
+                <Label>روز</Label>
+                <input
+                  value={recDay}
+                  onChange={(e) => setRecDay(e.target.value)}
+                  placeholder="1"
+                  className="w-full h-10 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-3 text-sm text-center text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 transition-all"
+                />
               </div>
+            </div>
 
-              <div className="space-y-1">
-                <Label className="text-slate-300 text-xs">رمز عبور جدید</Label>
-                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="حداقل ۸ کاراکتر" className="w-full h-10 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-3 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 transition-all" />
-              </div>
+            <div>
+              <Label>نام مادر</Label>
+              <input
+                value={recMotherName}
+                onChange={(e) => setRecMotherName(e.target.value)}
+                placeholder="نام مادر خود را وارد کنید"
+                className="w-full h-10 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-3 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 transition-all"
+              />
+            </div>
 
-              {error && <p className="text-red-400 text-xs text-center bg-red-900/20 p-2 rounded-lg leading-relaxed">{error}</p>}
-              {success && <p className="text-green-400 text-xs text-center bg-green-900/20 p-2 rounded-lg leading-relaxed">{success}</p>}
+            <div>
+              <Label>رمز عبور جدید</Label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="حداقل ۸ کاراکتر"
+                className="w-full h-10 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-3 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 transition-all"
+              />
+            </div>
 
-              <Button type="submit" disabled={loading} className="btn-gold-wave w-full h-10 rounded-xl mt-2 text-sm">
-                {loading ? "..." : "تغییر رمز عبور"}
-              </Button>
-              
-              <button type="button" onClick={() => setIsForgotPassword(false)} className="w-full text-center text-xs text-[#D6B56D] mt-2 hover:underline">
-                بازگشت به صفحه ورود
-              </button>
-            </form>
-          </div>
+            {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+            {success && <p className="text-green-400 text-sm text-center">{success}</p>}
+
+            <Button type="submit" disabled={loading} className="w-full btn-primary py-3">
+              {loading ? "..." : "تغییر رمز عبور"}
+            </Button>
+
+            <button type="button" onClick={() => setIsForgotPassword(false)} className="w-full text-center text-xs text-[#D6B56D] mt-2 hover:underline">
+              بازگشت به صفحه ورود
+            </button>
+          </form>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden text-slate-200 bg-[var(--bg-main)]" dir="rtl">
+    <div className="min-h-screen w-full flex items-center justify-center bg-[var(--bg-main)] px-4">
       {isUpgrade && (
-         <button onClick={() => setCurrentRoute("settings")} className="absolute top-6 right-6 text-sm text-[#D6B56D] font-bold hover:underline">انصراف</button>
+        <button onClick={() => setCurrentRoute("settings")} className="absolute top-6 right-6 text-sm text-[#D6B56D] font-bold hover:underline">انصراف</button>
       )}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center mb-8 mt-8">
-        <div className="flex items-center gap-4 text-[#D6B56D] drop-shadow-md mb-2">
-          <Logo size={50} className="animate-[spin_25s_linear_infinite]" />
-          <h1 className="text-5xl font-logo font-bold tracking-[0.2em]">LUMA</h1>
-        </div>
-        <p className="text-[#8B5CF6] font-medium">به دنیای درون خود خوش آمدید</p>
+        <Logo size="lg" />
+        <h1 className="text-3xl font-bold text-[var(--text-main)] mt-4">LUMA</h1>
+        <p className="text-[var(--text-muted)] mt-2">به دنیای درون خود خوش آمدید</p>
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
-        <div className="bg-[var(--bg-card)] border border-[var(--border-gold)] rounded-[2rem] w-full shadow-2xl p-8">
-          <h2 className="text-2xl font-bold text-center text-[#D6B56D] mb-6">
-            {isUpgrade ? "ثبت‌نام و ارتقای حساب" : isLogin ? t("login") : t("register")}
-          </h2>
+        <h2 className="text-xl font-bold text-[var(--text-main)] mb-6 text-center">
+          {isUpgrade ? "ثبت‌نام و ارتقای حساب" : isLogin ? t("login") : t("register")}
+        </h2>
 
-          {isUpgrade && (
-            <p className="text-center text-slate-400 text-xs mb-4 leading-relaxed">
-              با ثبت‌نام، تمام اطلاعات مهمان شما به حساب جدید منتقل می‌شود.
-            </p>
-          )}
+        {isUpgrade && (
+          <p className="text-sm text-[var(--text-muted)] mb-4 text-center">
+            با ثبت‌نام، تمام اطلاعات مهمان شما به حساب جدید منتقل می‌شود.
+          </p>
+        )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="username" className="text-slate-300">شناسه کاربری (فقط انگلیسی)</Label>
-              <input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="مثلاً: ali_reza" className="w-full h-12 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-4 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 focus:border-[#D6B56D] transition-all" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-slate-300">{t("password")}</Label>
-              <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="رمز عبور" className="w-full h-12 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-4 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 focus:border-[#D6B56D] transition-all" />
-            </div>
-
-            {!isLogin && (
-              <div className="space-y-1.5">
-                <Label htmlFor="confirmPassword" className="text-slate-300">تأیید رمز عبور</Label>
-                <input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="تأیید رمز" className="w-full h-12 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-4 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 focus:border-[#D6B56D] transition-all" />
-              </div>
-            )}
-
-            {error && <p className="text-red-400 text-xs font-medium text-center bg-red-900/20 p-2 rounded-lg leading-relaxed">{error}</p>}
-
-            <Button type="submit" disabled={loading} className="btn-gold-wave w-full h-12 rounded-xl mt-2 font-bold">
-              {loading ? "..." : (isUpgrade ? "ثبت‌نام و انتقال داده‌ها" : isLogin ? t("login") : t("register"))}
-            </Button>
-          </form>
-
-          <div className="mt-4 flex flex-col gap-2 text-center text-sm">
-            {isLogin && !isUpgrade && (
-              <button type="button" onClick={() => setIsForgotPassword(true)} className="text-slate-400 hover:text-white transition-colors">
-                رمز عبور را فراموش کرده‌اید؟
-              </button>
-            )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label>نام کاربری (فارسی یا لاتین)</Label>
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="مثلاً: آرنا"
+              className="w-full h-12 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-4 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 focus:border-[#D6B56D] transition-all"
+            />
           </div>
 
-          {!isUpgrade && (
-            <div className="mt-6 flex flex-col gap-3 text-center text-sm">
-              <button type="button" onClick={toggleMode} className="text-[#D6B56D] hover:text-amber-400 font-medium">
-                {isLogin ? t("register") : t("login")}
-              </button>
-              <div className="flex items-center gap-2 text-slate-600">
-                <div className="h-px bg-slate-700 flex-1"></div>
-                <span>یا</span>
-                <div className="h-px bg-slate-700 flex-1"></div>
-              </div>
-              <Button type="button" variant="outline" onClick={handleGuest} disabled={loading} className="btn-outline w-full h-10 rounded-xl">
-                {t("guest")}
-              </Button>
+          {!isLogin && (
+            <div>
+              <Label>ایمیل</Label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="example@email.com"
+                className="w-full h-12 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-4 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 focus:border-[#D6B56D] transition-all"
+              />
             </div>
           )}
-        </div>
+
+          <div>
+            <Label>{t("password")}</Label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="رمز عبور"
+              className="w-full h-12 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-4 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 focus:border-[#D6B56D] transition-all"
+            />
+          </div>
+
+          {!isLogin && (
+            <div>
+              <Label>تأیید رمز عبور</Label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="تأیید رمز"
+                className="w-full h-12 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-4 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 focus:border-[#D6B56D] transition-all"
+              />
+            </div>
+          )}
+
+          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+
+          <Button type="submit" disabled={loading} className="w-full btn-primary py-3">
+            {loading ? "..." : (isUpgrade ? "ثبت‌نام و انتقال داده‌ها" : isLogin ? t("login") : t("register"))}
+          </Button>
+        </form>
+
+        {isLogin && !isUpgrade && (
+          <button onClick={() => setIsForgotPassword(true)} className="w-full text-center text-sm text-slate-400 hover:text-white transition-colors mt-4">
+            رمز عبور را فراموش کرده‌اید؟
+          </button>
+        )}
+
+        {!isUpgrade && (
+          <div className="mt-6 pt-4 border-t border-[var(--border-gold)]/20 space-y-3">
+            <button onClick={toggleMode} className="w-full py-2 text-sm text-[#D6B56D] hover:underline">
+              {isLogin ? t("register") : t("login")}
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-[var(--border-gold)]/20" />
+              <span className="text-xs text-[var(--text-muted)]">یا</span>
+              <div className="flex-1 h-px bg-[var(--border-gold)]/20" />
+            </div>
+
+            <button onClick={handleGuest} disabled={loading} className="w-full py-3 rounded-xl border border-dashed border-[var(--border-gold)]/40 text-[var(--text-muted)] hover:text-[#D6B56D] hover:border-[#D6B56D]/60 transition-all text-sm">
+              {t("guest")}
+            </button>
+          </div>
+        )}
       </motion.div>
     </div>
   );
