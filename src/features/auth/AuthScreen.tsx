@@ -19,7 +19,7 @@ function getErrorMessage(code: AuthErrorCode, isFa: boolean, fallbackMsg?: strin
   const messages: Record<AuthErrorCode, { fa: string; en: string }> = {
     EMPTY_FIELDS: { fa: "لطفاً همه فیلدها را پر کنید", en: "Please fill all fields" },
     USERNAME_TOO_SHORT: { fa: "نام کاربری باید حداقل ۲ کاراکتر باشد", en: "Username must be at least 2 characters" },
-    PASSWORD_TOO_SHORT: { fa: "رمز عبور باید حداقل ۶ کاراکتر باشد", en: "Password must be at least 6 characters" },
+    PASSWORD_TOO_SHORT: { fa: "رمز عبور باید حداقل ۸ کاراکتر باشد", en: "Password must be at least 8 characters" },
     USER_LIMIT: { fa: "حداکثر ۱۰ کاربر مجاز است", en: "Maximum 10 users allowed" },
     USERNAME_TAKEN: { fa: "این نام کاربری قبلاً گرفته شده است", en: "Username already taken" },
     INVALID_CREDENTIALS: { fa: "نام کاربری یا رمز عبور اشتباه است", en: "Invalid username or password" },
@@ -48,9 +48,9 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
 
   const [isForgotPassword, setIsForgotPassword] = useState(false);
 
-  const [recYear, setRecYear] = useState("");
-  const [recMonth, setRecMonth] = useState("");
-  const [recDay, setRecDay] = useState("");
+  const [recYear, setRecYear] = useState<string>("");
+  const [recMonth, setRecMonth] = useState<string>("");
+  const [recDay, setRecDay] = useState<string>("");
   const [recMotherName, setRecMotherName] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
@@ -68,7 +68,7 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
     try {
       const result = isLogin
         ? await loginUser(username, password)
-        : await registerUser(username, email, password);
+        : await registerUser(username, password, email || undefined);
 
       if (!result.success) {
         setError(getErrorMessage(result.error!, isFa, result.errorMessage));
@@ -88,7 +88,7 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
     setError("");
     setSuccess("");
 
-    if (!username.trim() || !recYear || !recMonth || !recDay || !recMotherName.trim() || !newPassword) {
+    if (!username.trim() || !recYear.trim() || !recMonth.trim() || !recDay.trim() || !recMotherName.trim() || !newPassword) {
       setError("لطفاً همه فیلدها را پر کنید");
       return;
     }
@@ -100,13 +100,23 @@ export function AuthScreen({ isUpgrade = false }: { isUpgrade?: boolean }) {
 
     setLoading(true);
 
-    const { data, error } = await supabase.rpc('reset_password_with_security_questions', {
+    const yearNum = parseInt(recYear, 10);
+    const monthNum = parseInt(recMonth, 10);
+    const dayNum = parseInt(recDay, 10);
+
+    if (isNaN(yearNum) || isNaN(monthNum) || isNaN(dayNum)) {
+      setError("تاریخ تولد باید عدد باشد");
+      setLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase.rpc("reset_password_with_security_questions", {
       p_username: username.trim(),
-      p_year: Number(recYear),
-      p_month: Number(recMonth),
-      p_day: Number(recDay),
+      p_year: yearNum,
+      p_month: monthNum,
+      p_day: dayNum,
       p_mother_name: recMotherName.trim(),
-      p_new_password: newPassword
+      p_new_password: newPassword,
     });
 
     if (error) {

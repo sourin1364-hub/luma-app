@@ -1,171 +1,159 @@
 import { supabase } from "../../lib/supabase";
-import { db, type User } from "../../db";
 import { useAuthStore } from "../../store/useAuthStore";
+import { db, type User, type BirthData } from "../../db";
 
-// ─── Backward-compatible exports ───
-export { createGuestUser as loginAsGuest };
+export const GUEST_USERNAME = "guest";
+export const MIN_PASSWORD_LENGTH = 8;
+export const MIN_USERNAME_LENGTH = 2;
 
-export enum AuthErrorCode {
-  EMPTY_FIELDS = "EMPTY_FIELDS",
-  USERNAME_TOO_SHORT = "USERNAME_TOO_SHORT",
-  PASSWORD_TOO_SHORT = "PASSWORD_TOO_SHORT",
-  USER_LIMIT = "USER_LIMIT",
-  USERNAME_TAKEN = "USERNAME_TAKEN",
-  INVALID_CREDENTIALS = "INVALID_CREDENTIALS",
-  UNKNOWN_ERROR = "UNKNOWN_ERROR",
-  INVALID_USERNAME_FORMAT = "INVALID_USERNAME_FORMAT",
-  EMAIL_NOT_CONFIRMED = "EMAIL_NOT_CONFIRMED",
-  NETWORK_ERROR = "NETWORK_ERROR",
+export type AuthErrorCode =
+  | "EMPTY_FIELDS"
+  | "USERNAME_TOO_SHORT"
+  | "PASSWORD_TOO_SHORT"
+  | "USER_LIMIT"
+  | "USERNAME_TAKEN"
+  | "INVALID_CREDENTIALS"
+  | "UNKNOWN_ERROR"
+  | "INVALID_USERNAME_FORMAT"
+  | "EMAIL_NOT_CONFIRMED"
+  | "NETWORK_ERROR";
+
+export interface AuthResult {
+  success: boolean;
+  error?: AuthErrorCode;
+  errorMessage?: string;
+  user?: User;
 }
-// ────────────────────────────────────
 
-function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+async function migrateGuestData(guestId: string | number, newUserId: string) {
+  try {
+    console.log("[Migration] Starting guest data migration...");
+
+    const guestProgress = await db.progress.get(guestId);
+    if (guestProgress && guestProgress.xp > 0) {
+      const eventId = crypto.randomUUID();
+      const { error } = await supabase.rpc("add_xp", {
+        p_event_id: eventId,
+        p_amount: guestProgress.xp,
+        p_source: "guest_migration",
+      });
+      if (!error) {
+        await db.progress.delete(guestId);
+        await db.progress.put({ userId: newUserId, xp: guestProgress.xp, level: guestProgress.level });
+      } else {
+        console.error("[Migration] Failed to migrate XP:", error);
+      }
+    }
+
+    const guestReadings = await db.readings.where("userId").equals(guestId).toArray();
+    for (const r of guestReadings) {
+      const { error } = await supabase.from("tarot_readings").insert({
+        id: r.uuid,
+        user_id: newUserId,
+        type: r.type,
+        cards: r.cards,
+        interpretation: r.interpretation,
+        created_at: new Date(r.createdAt).toISOString(),
+      });
+      await db.readings.update(r.id!, { userId: newUserId, synced: !error });
+    }
+
+    const guestUser = await db.users.get(guestId as number);
+    if (guestUser?.birthData) {
+      await supabase.from("birth_profiles").delete().eq("user_id", newUserId);
+      await supabase.from("birth_profiles").insert({
+        user_id: newUserId,
+        year: guestUser.birthData.year,
+        month: guestUser.birthData.month,
+        day: guestUser.birthData.day,
+        mother_name: guestUser.birthData.motherName,
+        birth_time: guestUser.birthData.birthTime,
+        birth_place: guestUser.birthData.birthPlace,
+      });
+    }
+
+    await db.users.delete(guestId as number);
+    console.log("[Migration] Guest data migrated successfully.");
+  } catch (err) {
+    console.error("[Migration] Error during guest migration:", err);
+  }
 }
 
-// اجازه نام کاربری فارسی، لاتین، اعداد، زیرخط و فاصله
 function isValidUsername(username: string): boolean {
   return /^[\u0600-\u06FFa-zA-Z0-9_\s]{2,30}$/.test(username.trim());
 }
 
-function isValidPassword(password: string): boolean {
-  return password.length >= 6;
-}
-
-// ─── registerUser با backward compatibility ───
-// ۲ آرگومان: registerUser(username, password) → email = username@luma.guest
-// ۳ آرگومان: registerUser(username, email, password)
 export async function registerUser(
-  usernameOrEmail: string,
-  passwordOrEmail: string,
-  password?: string
-): Promise<{ user: User | null; success: boolean; error?: AuthErrorCode; errorMessage?: string }> {
-  let username: string;
-  let email: string;
-  let pass: string;
-
-  if (password === undefined) {
-    // ۲ آرگومان (قدیمی): registerUser(username, password)
-    username = usernameOrEmail;
-    email = `${usernameOrEmail}@luma.guest`;
-    pass = passwordOrEmail;
-  } else {
-    // ۳ آرگومان (جدید): registerUser(username, email, password)
-    username = usernameOrEmail;
-    email = passwordOrEmail;
-    pass = password;
+  username: string,
+  password: string,
+  email?: string
+): Promise<AuthResult> {
+  const trimmed = username.trim();
+  if (!trimmed || !password) {
+    return { success: false, error: "EMPTY_FIELDS" };
+  }
+  if (trimmed.length < MIN_USERNAME_LENGTH) {
+    return { success: false, error: "USERNAME_TOO_SHORT" };
+  }
+  if (!isValidUsername(trimmed)) {
+    return { success: false, error: "INVALID_USERNAME_FORMAT" };
+  }
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return { success: false, error: "PASSWORD_TOO_SHORT" };
   }
 
-  if (!username.trim() || !pass.trim() || (password !== undefined && !email.trim())) {
-    return {
-      user: null,
-      success: false,
-      error: AuthErrorCode.EMPTY_FIELDS,
-      errorMessage: "لطفاً همه فیلدها را پر کنید",
-    };
-  }
-
-  if (!isValidUsername(username)) {
-    return {
-      user: null,
-      success: false,
-      error: AuthErrorCode.INVALID_USERNAME_FORMAT,
-      errorMessage: "نام کاربری باید ۲ تا ۳۰ کاراکتر باشد و فقط شامل حروف فارسی/لاتین، اعداد و زیرخط.",
-    };
-  }
-
-  if (password !== undefined && !isValidEmail(email)) {
-    return {
-      user: null,
-      success: false,
-      error: AuthErrorCode.INVALID_USERNAME_FORMAT,
-      errorMessage: "لطفاً یک ایمیل معتبر وارد کنید.",
-    };
-  }
-
-  if (!isValidPassword(pass)) {
-    return {
-      user: null,
-      success: false,
-      error: AuthErrorCode.PASSWORD_TOO_SHORT,
-      errorMessage: "رمز عبور باید حداقل ۶ کاراکتر باشد.",
-    };
-  }
+  const finalEmail = email && email.includes("@") ? email : `${trimmed}@luma.guest`;
 
   const { data, error } = await supabase.auth.signUp({
-    email,
-    password: pass,
-    options: {
-      data: { username: username.trim() },
-    },
+    email: finalEmail,
+    password,
+    options: { data: { username: trimmed } },
   });
 
   if (error) {
-    const code = error.message.includes("confirmed")
-      ? AuthErrorCode.EMAIL_NOT_CONFIRMED
-      : AuthErrorCode.UNKNOWN_ERROR;
-    return {
-      user: null,
-      success: false,
-      error: code,
-      errorMessage: error.message,
-    };
+    console.error("Supabase signUp error:", error);
+    if (
+      error.message.includes("already registered") ||
+      error.message.includes("already exists") ||
+      error.message.includes("User already registered")
+    ) {
+      return { success: false, error: "USERNAME_TAKEN" };
+    }
+    return { success: false, error: "UNKNOWN_ERROR", errorMessage: error.message };
   }
 
   if (!data.user) {
-    return {
-      user: null,
-      success: false,
-      error: AuthErrorCode.UNKNOWN_ERROR,
-      errorMessage: "ثبت‌نام انجام نشد.",
-    };
+    return { success: false, error: "INVALID_CREDENTIALS" };
   }
 
   const user: User = {
     id: data.user.id,
-    username: username.trim(),
+    username: trimmed,
     isGuest: false,
     createdAt: Date.now(),
   };
 
-  useAuthStore.getState().setCurrentUser(user);
-
   await supabase.from("profiles").upsert({
     id: data.user.id,
-    username: username.trim(),
-    display_name: username.trim(),
+    username: trimmed,
+    display_name: trimmed,
   });
 
-  return { user, success: true };
+  const previousUser = useAuthStore.getState().currentUser;
+  if (previousUser && previousUser.isGuest && previousUser.id) {
+    await migrateGuestData(previousUser.id, data.user.id);
+  }
+
+  return { success: true, user };
 }
 
-// ─── loginUser با backward compatibility ───
-// اگر username شامل @ باشد، به عنوان email استفاده می‌شود
-export async function loginUser(
-  usernameOrEmail: string,
-  password: string
-): Promise<{ user: User | null; success: boolean; error?: AuthErrorCode; errorMessage?: string }> {
-  if (!usernameOrEmail.trim() || !password.trim()) {
-    return {
-      user: null,
-      success: false,
-      error: AuthErrorCode.EMPTY_FIELDS,
-      errorMessage: "لطفاً همه فیلدها را پر کنید",
-    };
+export async function loginUser(username: string, password: string): Promise<AuthResult> {
+  const trimmed = username.trim();
+  if (!trimmed || !password) {
+    return { success: false, error: "EMPTY_FIELDS" };
   }
 
-  const email = usernameOrEmail.includes("@")
-    ? usernameOrEmail
-    : `${usernameOrEmail}@luma.guest`;
-
-  if (!isValidPassword(password)) {
-    return {
-      user: null,
-      success: false,
-      error: AuthErrorCode.PASSWORD_TOO_SHORT,
-      errorMessage: "رمز عبور باید حداقل ۶ کاراکتر باشد.",
-    };
-  }
+  const email = trimmed.includes("@") ? trimmed : `${trimmed}@luma.guest`;
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -173,24 +161,12 @@ export async function loginUser(
   });
 
   if (error) {
-    const code = error.message.includes("Invalid login")
-      ? AuthErrorCode.INVALID_CREDENTIALS
-      : AuthErrorCode.UNKNOWN_ERROR;
-    return {
-      user: null,
-      success: false,
-      error: code,
-      errorMessage: error.message,
-    };
+    console.error("Supabase login error:", error);
+    return { success: false, error: "INVALID_CREDENTIALS", errorMessage: error.message };
   }
 
   if (!data.user) {
-    return {
-      user: null,
-      success: false,
-      error: AuthErrorCode.UNKNOWN_ERROR,
-      errorMessage: "ورود ناموفق بود.",
-    };
+    return { success: false, error: "INVALID_CREDENTIALS" };
   }
 
   const { data: profileData } = await supabase
@@ -211,7 +187,12 @@ export async function loginUser(
 
   const user: User = {
     id: data.user.id,
-    username: profile?.display_name || profile?.username || (data.user.user_metadata?.username as string) || data.user.email?.split("@")[0] || "User",
+    username:
+      profile?.display_name ||
+      profile?.username ||
+      (data.user.user_metadata?.username as string) ||
+      data.user.email?.split("@")[0] ||
+      "User",
     isGuest: false,
     createdAt: new Date(data.user.created_at).getTime(),
     birthData: birthDataRecord
@@ -226,23 +207,35 @@ export async function loginUser(
       : undefined,
   };
 
-  useAuthStore.getState().setCurrentUser(user);
-  return { user, success: true };
+  const previousUser = useAuthStore.getState().currentUser;
+  if (previousUser && previousUser.isGuest && previousUser.id) {
+    await migrateGuestData(previousUser.id, data.user.id);
+  }
+
+  return { success: true, user };
+}
+
+export async function loginAsGuest(): Promise<AuthResult> {
+  const existing = await db.users.where("username").equals(GUEST_USERNAME).first();
+  if (existing) return { success: true, user: existing };
+
+  const id = await db.users.add({
+    username: GUEST_USERNAME,
+    isGuest: true,
+    createdAt: Date.now(),
+  });
+  const user = await db.users.get(id);
+  return { success: true, user: user! };
 }
 
 export async function updateUserBirthData(
   userId: string | number,
-  birthData: {
-    year: number;
-    month: number;
-    day: number;
-    motherName: string;
-    birthTime: string;
-    birthPlace: string;
-  }
+  birthData: BirthData
 ): Promise<{ error?: string }> {
   if (typeof userId === "string") {
-    const { error } = await supabase.from("birth_profiles").upsert({
+    await supabase.from("birth_profiles").delete().eq("user_id", userId);
+
+    const { error } = await supabase.from("birth_profiles").insert({
       user_id: userId,
       year: birthData.year,
       month: birthData.month,
@@ -251,28 +244,15 @@ export async function updateUserBirthData(
       birth_time: birthData.birthTime,
       birth_place: birthData.birthPlace,
     });
-
-    if (error) {
-      console.error("Error saving birth data:", error);
-      return { error: error.message };
-    }
+    if (error) throw new Error(`Birth Profile Error: ${error.message}`);
   } else {
     await db.users.update(userId, { birthData });
   }
 
+  const currentUser = useAuthStore.getState().currentUser;
+  if (currentUser && currentUser.id === userId) {
+    useAuthStore.getState().setCurrentUser({ ...currentUser, birthData });
+  }
+
   return {};
-}
-
-export async function createGuestUser(): Promise<{ user: User | null; success: boolean; error?: AuthErrorCode; errorMessage?: string }> {
-  const guestId = Date.now();
-  const user: User = {
-    id: guestId,
-    username: `مهمان ${guestId.toString().slice(-4)}`,
-    isGuest: true,
-    createdAt: Date.now(),
-  };
-
-  await db.users.add(user);
-  useAuthStore.getState().setCurrentUser(user);
-  return { user, success: true };
 }
