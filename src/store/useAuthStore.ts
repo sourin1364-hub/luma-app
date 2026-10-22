@@ -7,12 +7,14 @@ interface AuthState {
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
   logout: () => void;
+  hasRehydrated: boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       currentUser: null,
+      hasRehydrated: false,
       setCurrentUser: (user) => set({ currentUser: user }),
       logout: () => {
         supabase.auth.signOut();
@@ -26,6 +28,9 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         currentUser: state.currentUser,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state) state.hasRehydrated = true;
+      },
     }
   )
 );

@@ -10,9 +10,10 @@ import { SplashScreen } from "./components/SplashScreen";
 
 function App() {
   const currentUser = useAuthStore((state) => state.currentUser);
+  const hasRehydrated = useAuthStore((state) => state.hasRehydrated);
   const themeMode = useAppStore((state) => state.themeMode);
 
-  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
   const [isRecovery, setIsRecovery] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
 
@@ -25,7 +26,8 @@ function App() {
     }
   }, [themeMode]);
 
-  // 2. بررسی وضعیت احراز هویت و دریافت اطلاعات کاربر
+  // 2. بررسی وضعیت احراز هویت
+  //    فقط بعد از rehydration زاستند اجرا می‌شود تا birthData persist شده از بین نرود
   useEffect(() => {
     document.documentElement.setAttribute("lang", "fa");
     document.documentElement.setAttribute("dir", "rtl");
@@ -37,11 +39,11 @@ function App() {
     const checkUser = async (sessionUser: { id: string; email?: string; user_metadata?: Record<string, unknown>; created_at: string }) => {
       if (!sessionUser) return;
 
-      // خواندن latest currentUser از store در لحظه استفاده (برای جلوگیری از race condition با rehydration)
+      // خواندن latest currentUser از store در لحظه استفاده
       const latestCurrent = useAuthStore.getState().currentUser;
 
       if (!navigator.onLine && latestCurrent && latestCurrent.id === sessionUser.id) {
-        setLoading(false);
+        setAuthLoading(false);
         return;
       }
 
@@ -75,14 +77,14 @@ function App() {
                 birthTime: birthDataRecord.birth_time,
                 birthPlace: birthDataRecord.birth_place,
               }
-            : latestCurrent?.birthData
+            : latestCurrent?.birthData   // اگر در Supabase نبود، birthData persist شده را حفظ کن
         };
 
         useAuthStore.getState().setCurrentUser(user);
       } catch (error) {
         console.warn("Network error while fetching user data. Using offline data.", error);
       } finally {
-        setLoading(false);
+        setAuthLoading(false);
       }
     };
 
@@ -99,7 +101,7 @@ function App() {
         if (current && !current.isGuest) {
           useAuthStore.getState().logout();
         }
-        setLoading(false);
+        setAuthLoading(false);
       }
     });
 
@@ -109,16 +111,16 @@ function App() {
         if (session?.user) {
           checkUser(session.user as { id: string; email?: string; user_metadata?: Record<string, unknown>; created_at: string });
         } else {
-          setLoading(false);
+          setAuthLoading(false);
         }
       })
       .catch((err) => {
         console.warn("Failed to get session while offline", err);
-        setLoading(false);
+        setAuthLoading(false);
       });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [hasRehydrated]);  // <-- وابستگی به hasRehydrated: فقط بعد از rehydration اجرا شود
 
   // 3. مسیریابی و نمایش صفحات
   if (showSplash) {
@@ -129,7 +131,9 @@ function App() {
     return <AuthScreen isUpgrade={true} />;
   }
 
-  if (loading) {
+  // اگر هنوز rehydration تمام نشده یا auth در حال چک کردن است، loading نشان بده
+  // این باعث می‌شود صفحه پروفایل برای چند ثانیه چشمک نزند
+  if (!hasRehydrated || authLoading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-main)]">
         <div className="text-[var(--text-muted)]">در حال بارگذاری...</div>

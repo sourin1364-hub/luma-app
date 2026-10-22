@@ -134,7 +134,7 @@ export function ProfileSetupScreen() {
       }
     } catch (err: any) {
       console.error("Sync error:", err);
-      setError(isFa ? "خطا در ذخیره اطلاعات. لطفاً دوباره تلاش کنید." : "Error saving data. Please try again.");
+      setError(isFa ? "خطا د ذخیره اطلاعات. لطفاً دوباره تلاش کنید." : "Error saving data. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -217,7 +217,7 @@ export function ProfileSetupScreen() {
             <input
               value={motherName}
               onChange={(e) => setMotherName(e.target.value)}
-              placeholder="نام ادر"
+              placeholder="نام مادر"
               className="w-full h-12 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-4 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 focus:border-[#D6B56D] transition-all"
             />
           </div>
