@@ -1,42 +1,34 @@
-/* فونت وزیر از گوگل (به عنوان پشتیبان) */
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ============================================
-   تعریف فونت‌های محلی (ایران یکان و وزیر)
-   نام فایل‌ها باید دقیقاً مطابق زیر باشد
-   ============================================ */
 @font-face {
-  font-family: 'IRANYekan';
-  src: url('/fonts/IRANYekanX-Regular.woff2') format('woff2'),
-       url('/fonts/IRANYekan-Regular.woff2') format('woff2');
+  font-family: "IRANYekan";
+  src: url("/fonts/IRANYekanX-Regular.woff2") format("woff2"),
+       url("/fonts/IRANYekan-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'IRANYekan';
-  src: url('/fonts/IRANYekanX-Bold.woff2') format('woff2'),
-       url('/fonts/IRANYekan-Bold.woff2') format('woff2');
+  font-family: "IRANYekan";
+  src: url("/fonts/IRANYekanX-Bold.woff2") format("woff2"),
+       url("/fonts/IRANYekan-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
-
 @font-face {
-  font-family: 'Vazir';
-  src: url('/fonts/Vazir-Regular.woff2') format('woff2'),
-       url('/fonts/Vazir.woff2') format('woff2');
+  font-family: "Vazir";
+  src: url("/fonts/Vazir-Regular.woff2") format("woff2"),
+       url("/fonts/Vazir.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Vazir';
-  src: url('/fonts/Vazir-Bold.woff2') format('woff2');
+  font-family: "Vazir";
+  src: url("/fonts/Vazir-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -51,7 +43,6 @@
     --border-gold: rgba(180, 140, 60, 0.4);
     --glow-color-rgb: 180, 140, 60;
   }
-
   .dark {
     --bg-main: #0B0D1A;
     --bg-card: rgba(23, 24, 43, 0.85);
@@ -60,19 +51,16 @@
     --border-gold: rgba(214, 181, 109, 0.5);
     --glow-color-rgb: 214, 181, 109;
   }
-
   html, body {
     background-color: var(--bg-main);
     color: var(--text-main);
-    font-family: 'IRANYekan', 'Vazir', 'Vazirmatn', sans-serif;
+    font-family: "IRANYekan", "Vazir", "Vazirmatn", sans-serif;
     transition: background-color 0.3s ease, color 0.3s ease;
     min-height: 100vh;
   }
-
-  /* فیلدهای ورودی از فونت وزیر استفاده می‌کنند */
   input, textarea, select {
-    font-family: 'Vazir', 'Vazirmatn', sans-serif;
-    font-weight: 400 !important;
+    font-family: "Vazir", "Vazirmatn", sans-serif;
+    font-weight: 400;
   }
 }
 
@@ -86,12 +74,10 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     color: var(--text-main);
   }
-
-  /* دکمه طلایی اصلی */
   .btn-primary {
     background: linear-gradient(135deg, #D6B56D 0%, #B89546 100%);
     color: #0B0D1A;
-    font-family: 'IRANYekan', sans-serif;
+    font-family: "IRANYekan", sans-serif;
     font-weight: 700;
     border: 1px solid #D6B56D;
     border-radius: 1rem;
@@ -102,12 +88,10 @@
     box-shadow: 0 0 25px rgba(214, 181, 109, 0.6);
     transform: translateY(-2px);
   }
-
-  /* دکمه شفاف با حاشیه طلایی */
   .btn-outline {
     background: transparent;
     color: var(--text-main);
-    font-family: 'IRANYekan', sans-serif;
+    font-family: "IRANYekan", sans-serif;
     border: 1px solid var(--border-gold);
     border-radius: 1rem;
     transition: all 0.3s ease;
@@ -117,111 +101,81 @@
     color: rgb(var(--glow-color-rgb));
     box-shadow: 0 0 15px rgba(214, 181, 109, 0.2);
   }
-}
-/* استایل دکمه‌های محاسبه و اکشن‌های اصلی */
-.btn-calculate {
-  background: linear-gradient(135deg, #D6B56D 0%, #B89546 100%) !important;
-  color: #0B0D1A !important;
-  font-family: 'IRANYekan', sans-serif !important;
-  font-weight: 700 !important;
-  border: 1px solid #D6B56D !important;
-  border-radius: 1rem !important;
-  box-shadow: 0 0 20px rgba(214, 181, 109, 0.4) !important;
-  transition: all 0.3s ease !important;
-}
-.btn-calculate:hover {
-  box-shadow: 0 0 30px rgba(214, 181, 109, 0.7) !important;
-  transform: translateY(-2px);
-}
-
-/* سایز استاندارد تصویر کارت در مودال‌ها */
-.modal-card-image {
-  max-height: 28vh !important;
-  width: auto !important;
-  max-width: 100% !important;
-  object-fit: contain !important;
-  margin: 0 auto !important;
-  border-radius: 0.75rem;
-  border: 2px solid rgba(var(--glow-color-rgb), 0.6);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-@media (min-width: 768px) {
-  .modal-card-image { max-height: 35vh !important; }
-}
-@media (min-width: 768px) {
+  .btn-calculate {
+    background: linear-gradient(135deg, #D6B56D 0%, #B89546 100%);
+    color: #0B0D1A;
+    font-family: "IRANYekan", sans-serif;
+    font-weight: 700;
+    border: 1px solid #D6B56D;
+    border-radius: 1rem;
+    box-shadow: 0 0 20px rgba(214, 181, 109, 0.4);
+    transition: all 0.3s ease;
+  }
+  .btn-calculate:hover {
+    box-shadow: 0 0 30px rgba(214, 181, 109, 0.7);
+    transform: translateY(-2px);
+  }
   .modal-card-image {
-  max-height: 28vh !important;
-  width: auto !important;
-  max-width: 100% !important;
-  object-fit: contain !important;
-  margin: 0 auto !important;
-  border-radius: 0.75rem;
-  border: 2px solid rgba(var(--glow-color-rgb), 0.6);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-@media (min-width: 768px) {
-  .modal-card-image { max-height: 35vh !important; }
-}
+    max-height: 28vh;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    margin: 0 auto;
+    border-radius: 0.75rem;
+    border: 2px solid rgba(var(--glow-color-rgb), 0.6);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: block;
+  }
+  @media (min-width: 768px) {
+    .modal-card-image { max-height: 35vh; }
+  }
+  .btn-animated-primary {
+    background: linear-gradient(135deg, #D6B56D 0%, #B89546 100%);
+    color: #0B0D1A;
+    border-radius: 1rem;
+    font-weight: 700;
+    border: 1px solid #D6B56D;
+    animation: pulse-glow 2.5s infinite;
+    transition: transform 0.2s ease;
+  }
+  .btn-animated-primary:hover { transform: scale(1.02); }
+  .btn-gold-wave {
+    background: linear-gradient(270deg, #D6B56D, #F3D58A, #B89546, #D6B56D);
+    background-size: 300% 300%;
+    color: #0B0D1A;
+    font-weight: 700;
+    border-radius: 1rem;
+    border: 1px solid #D6B56D;
+    box-shadow: 0 0 20px rgba(214, 181, 109, 0.4);
+    animation: gold-wave 4s ease infinite;
+    transition: transform 0.2s ease;
+  }
+  .btn-gold-wave:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 30px rgba(214, 181, 109, 0.8);
+  }
 }
 
-/* مخفی کردن اسکرول‌بار اسلایدر */
-.hide-scrollbar::-webkit-scrollbar { display: none; }
-.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-/* انیمیشن دکمه طلایی */
 @keyframes pulse-glow {
   0% { box-shadow: 0 0 15px rgba(214, 181, 109, 0.4); }
   50% { box-shadow: 0 0 30px rgba(214, 181, 109, 0.8); }
   100% { box-shadow: 0 0 15px rgba(214, 181, 109, 0.4); }
 }
-.btn-animated-primary {
-  background: linear-gradient(135deg, #D6B56D 0%, #B89546 100%) !important;
-  color: #0B0D1A !important;
-  border-radius: 1rem !important;
-  font-weight: 700 !important;
-  border: 1px solid #D6B56D !important;
-  animation: pulse-glow 2.5s infinite !important;
-  transition: transform 0.2s ease;
-}
-.btn-animated-primary:hover {
-  transform: scale(1.02);
-}
-/* ============================================
-   انیمیشن موج طلایی برای دکمه محاسبه
-   ============================================ */
 @keyframes gold-wave {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-.btn-gold-wave {
-  background: linear-gradient(270deg, #D6B56D, #F3D58A, #B89546, #D6B56D);
-  background-size: 300% 300%;
-  color: #0B0D1A !important;
-  font-weight: 700 !important;
-  border-radius: 1rem !important;
-  border: 1px solid #D6B56D !important;
-  box-shadow: 0 0 20px rgba(214, 181, 109, 0.4) !important;
-  animation: gold-wave 4s ease infinite !important;
-  transition: transform 0.2s ease;
-}
-.btn-gold-wave:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 30px rgba(214, 181, 109, 0.8) !important;
-}
 
-/* ============================================
-   اسلایدر مدرن (Scroll Picker) شبیه iOS
-   ============================================ */
 .picker-container {
   position: relative;
   height: 120px;
   overflow-y: scroll;
   scroll-snap-type: y mandatory;
-  -ms-overflow-style: none; scrollbar-width: none;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 .picker-container::-webkit-scrollbar { display: none; }
-
 .picker-item {
   height: 40px;
   display: flex;
@@ -233,14 +187,12 @@
   color: var(--text-muted);
   cursor: pointer;
 }
-
 .picker-item.selected {
   color: #D6B56D;
   font-size: 1.4rem;
   font-weight: 700;
   text-shadow: 0 0 10px rgba(214, 181, 109, 0.5);
 }
-
 .picker-fade-top, .picker-fade-bottom {
   position: absolute;
   left: 0; right: 0;
@@ -250,7 +202,6 @@
 }
 .picker-fade-top { top: 0; background: linear-gradient(to bottom, var(--bg-card), transparent); }
 .picker-fade-bottom { bottom: 0; background: linear-gradient(to top, var(--bg-card), transparent); }
-
 .picker-indicator {
   position: absolute;
   top: 40px; left: 10px; right: 10px;
@@ -262,3 +213,5 @@
   background: rgba(214, 181, 109, 0.05);
   border-radius: 8px;
 }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

@@ -6,7 +6,7 @@ import { supabase } from "../lib/supabase";
 interface AuthState {
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -14,8 +14,8 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       currentUser: null,
       setCurrentUser: (user) => set({ currentUser: user }),
-      logout: () => {
-        supabase.auth.signOut();
+      logout: async () => {
+        await supabase.auth.signOut();
         set({ currentUser: null });
       },
     }),
@@ -26,9 +26,11 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         currentUser: state.currentUser
           ? {
-              ...state.currentUser,
-              passwordHash: undefined,
-              passwordSalt: undefined,
+              id: state.currentUser.id,
+              username: state.currentUser.username,
+              isGuest: state.currentUser.isGuest,
+              createdAt: state.currentUser.createdAt,
+              birthData: state.currentUser.birthData,
             }
           : null,
       }),

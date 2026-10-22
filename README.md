@@ -1,32 +1,51 @@
-# React + TypeScript + Vite
+# LUMA — لوما
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+اپلیکیشن جامع تاروت، آسترولوژی و خودشناسی
 
-Currently, two official plugins are available:
+## درباره LUMA
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+LUMA (لوما) یک اپلیکیشن PWA فارسی‌زبان برای تاروت، چارت تولد، آسترولوژی و خودشناسی است.
 
-## React Compiler
+- ۷۸ کارت تاروت کامل با تفسیر حرفه‌ای
+- چارت تولد و تحلیل آسترولوژی
+- حالت آفلاین با Dexie (IndexedDB)
+- همگام‌سازی ابری با Supabase
+- سیستم XP و گیمیفیکیشن
+- طراحی Dark Luxury با تم طلایی و سرمه‌ای
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## لینک آنلاین
 
-## Expanding the Oxlint configuration
+https://sourin1364-hub.github.io/luma-app/
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## تکنولوژی‌ها
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+| بخش | تکنولوژی |
+|-----|----------|
+| فرانت‌اند | React 19 + TypeScript |
+| باندلر | Vite 8 |
+| استایل | Tailwind CSS 3 |
+| انیمیشن | Framer Motion |
+| دیتابیس محلی | Dexie (IndexedDB) |
+| بک‌اند | Supabase (PostgreSQL + Auth) |
+| PWA | vite-plugin-pwa + Workbox |
+| تقویم شمسی | jalaali-js |
+| ستاره‌شناسی | astronomy-engine |
+
+## نصب و اجرا
+
+```bash
+git clone https://github.com/sourin1364-hub/luma-app.git
+cd luma-app
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## دیپلوی
+
+این پروژه با GitHub Actions روی GitHub Pages دیپلوی می‌شود.
+
+## صاحب امتیاز
+
+**سورین کاملائی**
+- وب‌سایت: https://lumeraworld.ir
+- گیت‌هاب: [@sourin1364-hub](https://github.com/sourin1364-hub)
