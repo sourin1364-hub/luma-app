@@ -16,6 +16,7 @@ function App() {
   const [isRecovery, setIsRecovery] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
 
+  // 1. مدیریت اعمال تم شب و روز (Dark Mode)
   useEffect(() => {
     if (themeMode === "dark") {
       document.documentElement.classList.add("dark");
@@ -24,6 +25,7 @@ function App() {
     }
   }, [themeMode]);
 
+  // 2. بررسی وضعیت احراز هویت و دریافت اطلاعات کاربر
   useEffect(() => {
     document.documentElement.setAttribute("lang", "fa");
     document.documentElement.setAttribute("dir", "rtl");
@@ -34,9 +36,11 @@ function App() {
 
     const checkUser = async (sessionUser: { id: string; email?: string; user_metadata?: Record<string, unknown>; created_at: string }) => {
       if (!sessionUser) return;
-      const current = useAuthStore.getState().currentUser;
 
-      if (!navigator.onLine && current && current.id === sessionUser.id) {
+      // خواندن latest currentUser از store در لحظه استفاده (برای جلوگیری از race condition با rehydration)
+      const latestCurrent = useAuthStore.getState().currentUser;
+
+      if (!navigator.onLine && latestCurrent && latestCurrent.id === sessionUser.id) {
         setLoading(false);
         return;
       }
@@ -59,11 +63,7 @@ function App() {
 
         const user: User = {
           id: sessionUser.id,
-          username:
-            (displayName as string) ||
-            (sessionUser.user_metadata?.username as string) ||
-            sessionUser.email?.split("@")[0] ||
-            "User",
+          username: displayName || (sessionUser.user_metadata?.username as string) || sessionUser.email?.split("@")[0] || "User",
           isGuest: false,
           createdAt: new Date(sessionUser.created_at).getTime(),
           birthData: birthDataRecord
@@ -75,7 +75,7 @@ function App() {
                 birthTime: birthDataRecord.birth_time,
                 birthPlace: birthDataRecord.birth_place,
               }
-            : current?.birthData,
+            : latestCurrent?.birthData
         };
 
         useAuthStore.getState().setCurrentUser(user);
@@ -120,6 +120,7 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // 3. مسیریابی و نمایش صفحات
   if (showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
   }

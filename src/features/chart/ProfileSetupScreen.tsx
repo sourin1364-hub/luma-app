@@ -10,6 +10,21 @@ import { MapPin, Search } from "lucide-react";
 import { CITIES, type City } from "../../lib/cities";
 import { PersianDateInput, PersianTimeInput } from "../../components/ui/PersianDate";
 
+const BIRTHDATA_STORAGE_KEY = "luma_birthData_backup";
+
+function saveBirthDataToStorage(birthData: object) {
+  try {
+    localStorage.setItem(BIRTHDATA_STORAGE_KEY, JSON.stringify(birthData));
+  } catch { /* ignore */ }
+}
+
+function loadBirthDataFromStorage() {
+  try {
+    const raw = localStorage.getItem(BIRTHDATA_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
 export function ProfileSetupScreen() {
   const currentUser = useAuthStore((s) => s.currentUser);
   const language = useAppStore((s) => s.language);
@@ -37,24 +52,32 @@ export function ProfileSetupScreen() {
   }, [citySearch]);
 
   useEffect(() => {
-    if (currentUser?.birthData) {
-      setBirthDate({
-        year: currentUser.birthData.year || 1370,
-        month: currentUser.birthData.month || 1,
-        day: currentUser.birthData.day || 1,
-      });
-      setMotherName(currentUser.birthData.motherName || "");
+    let birthData = currentUser?.birthData;
 
-      if (currentUser.birthData.birthTime) {
-        const parts = currentUser.birthData.birthTime.split(" ");
+    // اگر در store نبود، از localStorage backup بخوان
+    if (!birthData) {
+      const backup = loadBirthDataFromStorage();
+      if (backup) birthData = backup;
+    }
+
+    if (birthData) {
+      setBirthDate({
+        year: birthData.year || 1370,
+        month: birthData.month || 1,
+        day: birthData.day || 1,
+      });
+      setMotherName(birthData.motherName || "");
+
+      if (birthData.birthTime) {
+        const parts = birthData.birthTime.split(" ");
         if (parts[0]) {
           const [h, m] = parts[0].split(":");
           setBirthTime({ hour: Number(h) || 12, minute: Number(m) || 0 });
         }
       }
 
-      if (currentUser.birthData.birthPlace) {
-        const foundCity = CITIES.find(c => c.name === currentUser.birthData?.birthPlace);
+      if (birthData.birthPlace) {
+        const foundCity = CITIES.find(c => c.name === birthData.birthPlace);
         if (foundCity) setSelectedCity(foundCity);
       }
     }
@@ -82,25 +105,25 @@ export function ProfileSetupScreen() {
       month: birthDate.month,
       day: birthDate.day,
       motherName: motherName.trim(),
-      birthTime: `${String(birthTime.hour).padStart(2, '0')}:${String(birthTime.minute).padStart(2, '0')}`,
+      birthTime: `${String(birthTime.hour).padStart(2, "0")}:${String(birthTime.minute).padStart(2, "0")}`,
       birthPlace: selectedCity.name,
     };
 
     const isEditing = !!currentUser.birthData;
 
-    // Update local store immediately for responsive UI
+    // 1. فوراً در store و backup ذخیره کن (برای پاسخگویی سریع UI)
     useAuthStore.getState().setCurrentUser({ ...currentUser, birthData: newBirthData });
+    saveBirthDataToStorage(newBirthData);
     useAppStore.getState().setCurrentRoute(isEditing ? "profile" : "home");
 
     try {
-      if (typeof currentUser.id === 'string') {
+      if (typeof currentUser.id === "string") {
         // Save profile display name to Supabase
         const { error: profileError } = await supabase
-          .from('profiles')
+          .from("profiles")
           .upsert({ id: currentUser.id, display_name: displayName.trim(), username: currentUser.username });
         if (profileError) {
           console.error("Profile sync err:", profileError);
-          setError(isFa ? "خطا در ذخیره نام نمایشی" : "Error saving display name");
         }
 
         // Save birth data to Supabase
@@ -153,7 +176,7 @@ export function ProfileSetupScreen() {
               className="w-full bg-[var(--bg-card)] border border-[var(--border-gold)] rounded-xl px-4 py-3 cursor-pointer flex justify-between items-center"
             >
               <span className="text-[var(--text-main)]">
-                {selectedCity.name} ({selectedCity.province ? `${selectedCity.province} - ` : ''}{selectedCity.country})
+                {selectedCity.name} ({selectedCity.province ? `${selectedCity.province} - ` : ""}{selectedCity.country})
               </span>
               <MapPin size={18} className="text-[var(--text-muted)]" />
             </button>
@@ -181,7 +204,7 @@ export function ProfileSetupScreen() {
                   >
                     <span className="text-white">{city.name}</span>
                     <span className="text-xs text-slate-400">
-                      {city.province ? `${city.province} - ` : ''}{city.country}
+                      {city.province ? `${city.province} - ` : ""}{city.country}
                     </span>
                   </div>
                 ))}
@@ -194,7 +217,7 @@ export function ProfileSetupScreen() {
             <input
               value={motherName}
               onChange={(e) => setMotherName(e.target.value)}
-              placeholder="نام مادر"
+              placeholder="نام ادر"
               className="w-full h-12 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-4 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 focus:border-[#D6B56D] transition-all"
             />
           </div>
