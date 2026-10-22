@@ -125,7 +125,7 @@ function App() {
   }
 
   if (isRecovery) {
-    return <AuthScreen recoveryMode />;
+    return <AuthScreen isUpgrade={true} />;
   }
 
   if (loading) {
