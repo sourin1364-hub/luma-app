@@ -20,7 +20,7 @@ export interface User {
 export interface Reading {
   id?: number;
   uuid: string;
-  userId: string | number;
+  userId: string;
   type: string;
   cards: number[];
   interpretation: string;
@@ -31,7 +31,7 @@ export interface Reading {
 export interface DailyDraw {
   id?: number;
   uuid: string;
-  userId: string | number;
+  userId: string;
   dateStr: string;
   cardId: number;
   createdAt: number;
@@ -39,7 +39,7 @@ export interface DailyDraw {
 }
 
 export interface Progress {
-  userId: string | number;
+  userId: string;
   level: number;
   xp: number;
 }
