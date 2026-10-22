@@ -10,7 +10,7 @@ export interface BirthData {
 }
 
 export interface User {
-  id?: string | number;
+  id: string;
   username: string;
   isGuest: boolean;
   createdAt: number;
