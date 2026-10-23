@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useAppStore } from "../../store/useAppStore";
 import { updateUserBirthData } from "../auth/authService";
+import { supabase } from "../../lib/supabase";
 import { Button } from "../../components/ui/button";
 import { Label } from "../../components/ui/label";
 import { motion } from "framer-motion";
@@ -32,7 +33,7 @@ export function ProfileSetupScreen() {
   const filteredCities = useMemo(() => {
     if (!citySearch.trim()) return CITIES;
     const query = citySearch.toLowerCase();
-    return CITIES.filter(c =>
+    return CITIES.filter((c) =>
       c.name.toLowerCase().includes(query) ||
       (c.province && c.province.toLowerCase().includes(query)) ||
       c.country.toLowerCase().includes(query)
@@ -57,7 +58,7 @@ export function ProfileSetupScreen() {
       }
 
       if (currentUser.birthData.birthPlace) {
-        const foundCity = CITIES.find(c => c.name === currentUser.birthData?.birthPlace);
+        const foundCity = CITIES.find((c) => c.name === currentUser.birthData?.birthPlace);
         if (foundCity) setSelectedCity(foundCity);
       }
     }
@@ -97,23 +98,41 @@ export function ProfileSetupScreen() {
       birthPlace: selectedCity.name,
     };
 
-    // 1. Save to Zustand state immediately (triggers persist)
-    const updatedUser = { ...currentUser, birthData: newBirthData };
-    setCurrentUser(updatedUser);
+    console.log("[ProfileSetup] Saving birth data:", newBirthData);
 
-    // 2. Also save directly to localStorage as extra backup
+    // 1. Save to localStorage backup immediately
     try {
       localStorage.setItem("luma_birth_backup", JSON.stringify(newBirthData));
-    } catch {}
+      console.log("[ProfileSetup] localStorage backup saved");
+    } catch (err) {
+      console.error("[ProfileSetup] localStorage backup failed:", err);
+    }
+
+    // 2. Save to Zustand state immediately (triggers persist)
+    const updatedUser = { ...currentUser, birthData: newBirthData };
+    setCurrentUser(updatedUser);
+    console.log("[ProfileSetup] Zustand state updated");
 
     // 3. Navigate immediately so user isn't stuck
     setCurrentRoute(isEditing ? "profile" : "home");
 
-    // 4. Sync to server in background
+    // 4. Sync display name to profiles
+    if (typeof currentUser.id === "string") {
+      supabase
+        .from("profiles")
+        .upsert({ id: currentUser.id, display_name: displayName.trim(), username: currentUser.username }, { onConflict: "id" })
+        .then(({ error }) => {
+          if (error) console.error("[ProfileSetup] Profile sync err:", error);
+          else console.log("[ProfileSetup] Profile synced successfully");
+        });
+    }
+
+    // 5. Sync to server in background
     try {
       await updateUserBirthData(currentUser.id, newBirthData);
+      console.log("[ProfileSetup] Server sync completed");
     } catch (err: any) {
-      console.error("Birth sync error:", err);
+      console.error("[ProfileSetup] Birth sync error:", err);
       // Don't show error to user - data is saved locally
     } finally {
       setLoading(false);
@@ -134,7 +153,7 @@ export function ProfileSetupScreen() {
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="مثلاً: آریان کاملایی"
-              className="w-full h-12 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-4 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 focus:border-[#D6B56D] transition-all"
+              className="w-full h-12 rounded-xl bg-white dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-4 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 focus:border-[#D6B56D] transition-all"
             />
           </div>
 
@@ -152,21 +171,21 @@ export function ProfileSetupScreen() {
             <Label className="text-[#D6B56D] mb-1 block">شهر تولد</Label>
             <div
               onClick={() => setShowCityList(!showCityList)}
-              className="w-full bg-[var(--bg-card)] border border-[var(--border-gold)] rounded-xl px-4 py-3 cursor-pointer flex justify-between items-center"
+              className="w-full bg-white dark:bg-[var(--bg-card)] border border-slate-300 dark:border-[var(--border-gold)] rounded-xl px-4 py-3 cursor-pointer flex justify-between items-center text-slate-800 dark:text-white"
             >
               <span>{selectedCity.name} ({selectedCity.province ? `${selectedCity.province} - ` : ""}{selectedCity.country})</span>
               <MapPin className="w-4 h-4 text-[#D6B56D]" />
             </div>
 
             {showCityList && (
-              <div className="mt-2 bg-[#17182B] border border-[#D6B56D]/30 rounded-xl max-h-60 overflow-y-auto">
-                <div className="p-2 sticky top-0 bg-[#17182B] border-b border-[#D6B56D]/20">
+              <div className="mt-2 bg-white dark:bg-[#17182B] border border-slate-300 dark:border-[#D6B56D]/30 rounded-xl max-h-60 overflow-y-auto">
+                <div className="p-2 sticky top-0 bg-white dark:bg-[#17182B] border-b border-slate-300 dark:border-[#D6B56D]/20">
                   <div className="flex items-center gap-2">
                     <Search className="w-4 h-4 text-[#D6B56D]" />
                     <input
                       value={citySearch}
                       onChange={(e) => setCitySearch(e.target.value)}
-                      className="w-full bg-transparent border-none text-sm text-white focus:outline-none"
+                      className="w-full bg-transparent border-none text-sm text-slate-800 dark:text-white focus:outline-none"
                       placeholder="جستجوی شهر..."
                       autoFocus
                     />
@@ -181,10 +200,10 @@ export function ProfileSetupScreen() {
                   <div
                     key={city.name}
                     onClick={() => { setSelectedCity(city); setShowCityList(false); setCitySearch(""); }}
-                    className="px-4 py-3 hover:bg-[rgba(214,181,109,0.1)] cursor-pointer border-b border-slate-700/50 last:border-0 flex justify-between items-center"
+                    className="px-4 py-3 hover:bg-[rgba(214,181,109,0.1)] cursor-pointer border-b border-slate-200 dark:border-slate-700/50 last:border-0 flex justify-between items-center text-slate-800 dark:text-white"
                   >
                     <span>{city.name}</span>
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
                       {city.province ? `${city.province} - ` : ""}{city.country}
                     </span>
                   </div>
@@ -199,7 +218,7 @@ export function ProfileSetupScreen() {
               value={motherName}
               onChange={(e) => setMotherName(e.target.value)}
               placeholder="نام مادر"
-              className="w-full h-12 rounded-xl bg-slate-50 dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-4 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 focus:border-[#D6B56D] transition-all"
+              className="w-full h-12 rounded-xl bg-white dark:bg-[#17182B]/80 border border-slate-300 dark:border-[#D6B56D]/40 px-4 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D6B56D]/50 focus:border-[#D6B56D] transition-all"
             />
           </div>
 
@@ -214,7 +233,7 @@ export function ProfileSetupScreen() {
             variant="outline"
             onClick={handleCancel}
             disabled={loading}
-            className="w-full h-12 rounded-full btn-outline"
+            className="w-full h-12 rounded-full border-slate-300 dark:border-[#D6B56D]/40 text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-[#17182B]"
           >
             انصراف
           </Button>
