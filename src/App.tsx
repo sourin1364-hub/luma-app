@@ -18,7 +18,6 @@ function App() {
   const [isRecovery, setIsRecovery] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
 
-  // Dark mode
   useEffect(() => {
     if (themeMode === "dark") {
       document.documentElement.classList.add("dark");
@@ -27,7 +26,6 @@ function App() {
     }
   }, [themeMode]);
 
-  // Auth check - ONLY after Zustand has rehydrated from localStorage
   useEffect(() => {
     document.documentElement.setAttribute("lang", "fa");
     document.documentElement.setAttribute("dir", "rtl");
@@ -36,7 +34,6 @@ function App() {
       setIsRecovery(true);
     }
 
-    // Do not run auth check until Zustand persist has finished reading localStorage
     if (!hasRehydrated) return;
 
     const checkUser = async (sessionUser: any) => {
@@ -45,17 +42,14 @@ function App() {
         return;
       }
 
-      // Get locally persisted user data (including birthData if saved)
       const localUser = useAuthStore.getState().currentUser;
 
-      // If offline and we already have this users data with birthData, keep it
       if (!navigator.onLine && localUser && localUser.id === sessionUser.id && localUser.birthData) {
         setAuthChecked(true);
         return;
       }
 
       try {
-        // Fetch birth data from Supabase
         const { data: birthDataRecords } = await supabase
           .from("birth_profiles")
           .select("*")
@@ -64,7 +58,6 @@ function App() {
 
         const birthDataRecord = birthDataRecords?.[0];
 
-        // Fetch display name from profiles
         const { data: profileData } = await supabase
           .from("profiles")
           .select("display_name")
@@ -73,105 +66,30 @@ function App() {
 
         const displayName = profileData?.[0]?.display_name;
 
-        // Build birthData: prefer Supabase data, fallback to locally persisted data
         let birthData = localUser?.birthData;
-        if (birthDataRecord) {
+        if (birthDataRecord && 
+            typeof birthDataRecord.year === "number" && 
+            typeof birthDataRecord.month === "number" && 
+            typeof birthDataRecord.day === "number" &&
+            birthDataRecord.year > 1200) {
           birthData = {
             year: birthDataRecord.year,
             month: birthDataRecord.month,
             day: birthDataRecord.day,
-            motherName: birthDataRecord.mother_name,
-            birthTime: birthDataRecord.birth_time,
-            birthPlace: birthDataRecord.birth_place,
+            motherName: birthDataRecord.mother_name || localUser?.birthData?.motherName || "",
+            birthTime: birthDataRecord.birth_time || localUser?.birthData?.birthTime || "",
+            birthPlace: birthDataRecord.birth_place || localUser?.birthData?.birthPlace || "",
+          };
+        } else if (birthDataRecord) {
+          console.warn("[App] birth_profiles record incomplete, merging with local data");
+          birthData = {
+            year: localUser?.birthData?.year || birthDataRecord.year || 0,
+            month: localUser?.birthData?.month || birthDataRecord.month || 0,
+            day: localUser?.birthData?.day || birthDataRecord.day || 0,
+            motherName: birthDataRecord.mother_name || localUser?.birthData?.motherName || "",
+            birthTime: birthDataRecord.birth_time || localUser?.birthData?.birthTime || "",
+            birthPlace: birthDataRecord.birth_place || localUser?.birthData?.birthPlace || "",
           };
         }
 
-        const user: User = {
-          id: sessionUser.id,
-          username:
-            displayName ||
-            sessionUser.user_metadata?.username ||
-            sessionUser.email?.split("@")[0] ||
-            "User",
-          isGuest: false,
-          createdAt: new Date(sessionUser.created_at).getTime(),
-          birthData,
-        };
-
-        setCurrentUser(user);
-      } catch (error) {
-        console.warn("Network error while fetching user data. Using offline data.", error);
-      } finally {
-        setAuthChecked(true);
-      }
-    };
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setIsRecovery(true);
-      }
-      if (session?.user) {
-        checkUser(session.user);
-      } else if (event === "SIGNED_OUT") {
-        const current = useAuthStore.getState().currentUser;
-        if (current && !current.isGuest) {
-          useAuthStore.getState().logout();
-        }
-        setAuthChecked(true);
-      }
-    });
-
-    supabase.auth
-      .getSession()
-      .then(({ data: { session } }) => {
-        if (session?.user) {
-          checkUser(session.user);
-        } else {
-          setAuthChecked(true);
-        }
-      })
-      .catch((err) => {
-        console.warn("Failed to get session while offline", err);
-        setAuthChecked(true);
-      });
-
-    return () => subscription.unsubscribe();
-  }, [hasRehydrated, setCurrentUser]);
-
-  // Splash screen
-  if (showSplash) {
-    return <SplashScreen onFinish={() => setShowSplash(false)} />;
-  }
-
-  // Recovery mode
-  if (isRecovery) {
-    return <AuthScreen isUpgrade={false} />;
-  }
-
-  // Loading while rehydrating OR fetching auth
-  if (!hasRehydrated || !authChecked) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-[var(--bg-main)]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-4 border-[#D6B56D] border-t-transparent rounded-full animate-spin" />
-          <p className="text-[var(--text-muted)]">در حال بارگذاری...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Not logged in
-  if (!currentUser) {
-    return <AuthScreen isUpgrade={false} />;
-  }
-
-  // Logged in but no birth data -> show profile setup
-  if (!currentUser.birthData) {
-    return <ProfileSetupScreen />;
-  }
-
-  // Everything ready -> home
-  return <HomeScreen />;
-}
-
-export default App;
+        const user
