@@ -55,6 +55,15 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [isRecovery, setIsRecovery] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  // Auto-dismiss splash screen when auth is ready
+useEffect(() => {
+  if (hasRehydrated && !loading && showSplash) {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 1500); // 1.5 second minimum splash time
+    return () => clearTimeout(timer);
+  }
+}, [hasRehydrated, loading, showSplash]);
 
   useEffect(() => {
     if (themeMode === "dark") {
