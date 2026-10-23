@@ -5,9 +5,10 @@ import { supabase } from "../lib/supabase";
 
 interface AuthState {
   currentUser: User | null;
+  hasRehydrated: boolean;
   setCurrentUser: (user: User | null) => void;
   logout: () => void;
-  hasRehydrated: boolean;
+  setHasRehydrated: (value: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -16,6 +17,7 @@ export const useAuthStore = create<AuthState>()(
       currentUser: null,
       hasRehydrated: false,
       setCurrentUser: (user) => set({ currentUser: user }),
+      setHasRehydrated: (value) => set({ hasRehydrated: value }),
       logout: () => {
         supabase.auth.signOut();
         set({ currentUser: null });
@@ -29,7 +31,9 @@ export const useAuthStore = create<AuthState>()(
         currentUser: state.currentUser,
       }),
       onRehydrateStorage: () => (state) => {
-        if (state) state.hasRehydrated = true;
+        if (state) {
+          state.setHasRehydrated(true);
+        }
       },
     }
   )

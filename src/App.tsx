@@ -11,13 +11,14 @@ import { SplashScreen } from "./components/SplashScreen";
 function App() {
   const currentUser = useAuthStore((state) => state.currentUser);
   const hasRehydrated = useAuthStore((state) => state.hasRehydrated);
+  const setCurrentUser = useAuthStore((state) => state.setCurrentUser);
   const themeMode = useAppStore((state) => state.themeMode);
 
-  const [authLoading, setAuthLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [isRecovery, setIsRecovery] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
 
-  // 1. مدیریت اعمال تم شب و روز (Dark Mode)
+  // Dark mode
   useEffect(() => {
     if (themeMode === "dark") {
       document.documentElement.classList.add("dark");
@@ -26,8 +27,7 @@ function App() {
     }
   }, [themeMode]);
 
-  // 2. بررسی وضعیت احراز هویت
-  //    فقط بعد از rehydration زاستند اجرا می‌شود تا birthData persist شده از بین نرود
+  // Auth check - ONLY after Zustand rehydration
   useEffect(() => {
     document.documentElement.setAttribute("lang", "fa");
     document.documentElement.setAttribute("dir", "rtl");
@@ -36,14 +36,20 @@ function App() {
       setIsRecovery(true);
     }
 
-    const checkUser = async (sessionUser: { id: string; email?: string; user_metadata?: Record<string, unknown>; created_at: string }) => {
-      if (!sessionUser) return;
+    // Wait for Zustand persist to finish before checking Supabase
+    if (!hasRehydrated) return;
 
-      // خواندن latest currentUser از store در لحظه استفاده
-      const latestCurrent = useAuthStore.getState().currentUser;
+    const checkUser = async (sessionUser: any) => {
+      if (!sessionUser) {
+        setLoading(false);
+        return;
+      }
 
-      if (!navigator.onLine && latestCurrent && latestCurrent.id === sessionUser.id) {
-        setAuthLoading(false);
+      const current = useAuthStore.getState().currentUser;
+
+      // If offline and we already have this user's data, skip Supabase fetch
+      if (!navigator.onLine && current && current.id === sessionUser.id && current.birthData) {
+        setLoading(false);
         return;
       }
 
@@ -61,47 +67,54 @@ function App() {
           .select("display_name")
           .eq("id", sessionUser.id)
           .limit(1);
+
         const displayName = profileData?.[0]?.display_name;
+
+        // Preserve existing birthData from localStorage if Supabase returns nothing
+        const existingBirthData = current?.birthData;
+        const birthData = birthDataRecord
+          ? {
+              year: birthDataRecord.year,
+              month: birthDataRecord.month,
+              day: birthDataRecord.day,
+              motherName: birthDataRecord.mother_name,
+              birthTime: birthDataRecord.birth_time,
+              birthPlace: birthDataRecord.birth_place,
+            }
+          : existingBirthData;
 
         const user: User = {
           id: sessionUser.id,
-          username: displayName || (sessionUser.user_metadata?.username as string) || sessionUser.email?.split("@")[0] || "User",
+          username:
+            displayName ||
+            sessionUser.user_metadata?.username ||
+            sessionUser.email?.split("@")[0] ||
+            "User",
           isGuest: false,
           createdAt: new Date(sessionUser.created_at).getTime(),
-          birthData: birthDataRecord
-            ? {
-                year: birthDataRecord.year,
-                month: birthDataRecord.month,
-                day: birthDataRecord.day,
-                motherName: birthDataRecord.mother_name,
-                birthTime: birthDataRecord.birth_time,
-                birthPlace: birthDataRecord.birth_place,
-              }
-            : latestCurrent?.birthData   // اگر در Supabase نبود، birthData persist شده را حفظ کن
+          birthData,
         };
 
-        useAuthStore.getState().setCurrentUser(user);
+        setCurrentUser(user);
       } catch (error) {
         console.warn("Network error while fetching user data. Using offline data.", error);
       } finally {
-        setAuthLoading(false);
+        setLoading(false);
       }
     };
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
         setIsRecovery(true);
       }
       if (session?.user) {
-        checkUser(session.user as { id: string; email?: string; user_metadata?: Record<string, unknown>; created_at: string });
+        checkUser(session.user);
       } else if (event === "SIGNED_OUT") {
         const current = useAuthStore.getState().currentUser;
         if (current && !current.isGuest) {
           useAuthStore.getState().logout();
         }
-        setAuthLoading(false);
+        setLoading(false);
       }
     });
 
@@ -109,40 +122,52 @@ function App() {
       .getSession()
       .then(({ data: { session } }) => {
         if (session?.user) {
-          checkUser(session.user as { id: string; email?: string; user_metadata?: Record<string, unknown>; created_at: string });
+          checkUser(session.user);
         } else {
-          setAuthLoading(false);
+          setLoading(false);
         }
       })
       .catch((err) => {
         console.warn("Failed to get session while offline", err);
-        setAuthLoading(false);
+        setLoading(false);
       });
 
     return () => subscription.unsubscribe();
-  }, [hasRehydrated]);  // <-- وابستگی به hasRehydrated: فقط بعد از rehydration اجرا شود
+  }, [hasRehydrated, setCurrentUser]);
 
-  // 3. مسیریابی و نمایش صفحات
+  // Splash screen
   if (showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
   }
 
+  // Recovery mode
   if (isRecovery) {
-    return <AuthScreen isUpgrade={true} />;
+    return <AuthScreen isUpgrade={false} />;
   }
 
-  // اگر هنوز rehydration تمام نشده یا auth در حال چک کردن است، loading نشان بده
-  // این باعث می‌شود صفحه پروفایل برای چند ثانیه چشمک نزند
-  if (!hasRehydrated || authLoading) {
+  // Loading while rehydrating OR fetching auth
+  if (!hasRehydrated || loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-main)]">
-        <div className="text-[var(--text-muted)]">در حال بارگذاری...</div>
+      <div className="min-h-screen w-full flex items-center justify-center bg-[var(--bg-main)]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-[#D6B56D] border-t-transparent rounded-full animate-spin" />
+          <p className="text-[var(--text-muted)]">در حال بارگذاری...</p>
+        </div>
       </div>
     );
   }
 
-  if (!currentUser) return <AuthScreen />;
-  if (!currentUser.birthData) return <ProfileSetupScreen />;
+  // Not logged in
+  if (!currentUser) {
+    return <AuthScreen isUpgrade={false} />;
+  }
+
+  // Logged in but no birth data -> show profile setup
+  if (!currentUser.birthData) {
+    return <ProfileSetupScreen />;
+  }
+
+  // Everything ready -> home
   return <HomeScreen />;
 }
 
