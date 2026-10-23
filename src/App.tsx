@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuthStore } from "./store/useAuthStore";
 import { useAppStore } from "./store/useAppStore";
 import { AuthScreen } from "./features/auth/AuthScreen";
@@ -6,7 +6,6 @@ import { HomeScreen } from "./features/auth/HomeScreen";
 import { ProfileSetupScreen } from "./features/chart/ProfileSetupScreen";
 import { supabase } from "./lib/supabase";
 import { type User, type BirthData } from "./db";
-import { SplashScreen } from "./components/SplashScreen";
 
 function readBirthBackup(): BirthData | null {
   try {
@@ -44,6 +43,30 @@ function getValidBirthData(
   return undefined;
 }
 
+// Simple inline splash screen to avoid external component issues
+function SimpleSplashScreen({ onFinish }: { onFinish: () => void }) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    timerRef.current = setTimeout(() => {
+      onFinish();
+    }, 2500);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [onFinish]);
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#0B0D1A] text-white">
+      <div className="text-center">
+        <div className="text-6xl font-bold text-[#D6B56D] mb-4 tracking-widest">LUMA</div>
+        <div className="text-[#D6B56D]/80 text-lg">سفری به دنیای درون</div>
+        <div className="mt-8 animate-spin rounded-full h-8 w-8 border-b-2 border-[#D6B56D] mx-auto"></div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const currentUser = useAuthStore((state) => state.currentUser);
   const storeBirthData = useAuthStore((state) => state.birthData);
@@ -55,15 +78,6 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [isRecovery, setIsRecovery] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
-  // Auto-dismiss splash screen when auth is ready
-useEffect(() => {
-  if (hasRehydrated && !loading && showSplash) {
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 1500); // 1.5 second minimum splash time
-    return () => clearTimeout(timer);
-  }
-}, [hasRehydrated, loading, showSplash]);
 
   useEffect(() => {
     if (themeMode === "dark") {
@@ -231,7 +245,7 @@ useEffect(() => {
   }, [hasRehydrated, setCurrentUser, setBirthData, storeBirthData]);
 
   if (showSplash) {
-    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+    return <SimpleSplashScreen onFinish={() => setShowSplash(false)} />;
   }
 
   if (isRecovery) {
