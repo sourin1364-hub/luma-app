@@ -9,8 +9,8 @@ interface AuthState {
   hasRehydrated: boolean;
   setCurrentUser: (user: User | null) => void;
   setBirthData: (data: BirthData | null) => void;
-  logout: () => void;
   setHasRehydrated: (value: boolean) => void;
+  logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -20,7 +20,7 @@ export const useAuthStore = create<AuthState>()(
       birthData: null,
       hasRehydrated: false,
       setCurrentUser: (user) => {
-        console.log("[AuthStore] setCurrentUser:", user?.birthData ? "has birthData" : "no birthData");
+        console.log("[AuthStore] setCurrentUser:", user ? `has birthData=${!!user.birthData}` : "null");
         set({ currentUser: user });
       },
       setBirthData: (data) => {
@@ -30,31 +30,28 @@ export const useAuthStore = create<AuthState>()(
       setHasRehydrated: (value) => set({ hasRehydrated: value }),
       logout: () => {
         supabase.auth.signOut();
-        set({ currentUser: null, birthData: null });
+        localStorage.removeItem("luma_birth_backup");
+        set({ currentUser: null, birthData: null, hasRehydrated: true });
       },
     }),
     {
       name: "luma-auth-v2",
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => localStorage),
-      onRehydrateStorage: () => (state) => {
-        console.log("[AuthStore] Rehydrated. birthData:", state?.birthData);
-        if (state) {
-          state.setHasRehydrated(true);
-        }
-      },
       partialize: (state) => ({
         currentUser: state.currentUser
           ? {
-              id: state.currentUser.id,
-              username: state.currentUser.username,
-              isGuest: state.currentUser.isGuest,
-              createdAt: state.currentUser.createdAt,
-              birthData: state.currentUser.birthData,
+              ...state.currentUser,
+              passwordHash: undefined,
+              passwordSalt: undefined,
             }
           : null,
         birthData: state.birthData,
       }),
+      onRehydrateStorage: () => (state) => {
+        console.log("[AuthStore] Rehydrated. birthData:", state?.birthData);
+        if (state) state.setHasRehydrated(true);
+      },
     }
   )
 );

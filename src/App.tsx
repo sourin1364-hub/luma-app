@@ -70,7 +70,7 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Auth state: Supabase is the source of truth
+  // Auth initialization
   useEffect(() => {
     if (!hasRehydrated) return;
 
@@ -80,16 +80,13 @@ function App() {
         console.log("[App] Session:", session?.user?.id || "null");
 
         if (!session?.user) {
-          // No session: clear any stale local user and show auth
           if (currentUser && !currentUser.isGuest) {
-            console.log("[App] No session but stale user exists -> logout");
             logout();
           }
           setLoading(false);
           return;
         }
 
-        // Session exists: build user
         setSessionUser(session.user);
         await loadUserData(session.user);
       } catch (err) {
@@ -116,7 +113,24 @@ function App() {
     });
 
     return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasRehydrated]);
+
+  // Fallback: rebuild currentUser from storeBirthData if session exists but currentUser is null
+  useEffect(() => {
+    if (!loading && !currentUser && sessionUser && hasValidBirthData(storeBirthData)) {
+      console.log("[App] Fallback: rebuilding currentUser from storeBirthData");
+      const newUser: User = {
+        id: sessionUser.id,
+        username: sessionUser.user_metadata?.username || sessionUser.email?.split("@")[0] || "User",
+        isGuest: false,
+        createdAt: new Date(sessionUser.created_at).getTime(),
+        birthData: storeBirthData!,
+      };
+      setCurrentUser(newUser);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, currentUser, sessionUser, storeBirthData]);
 
   const loadUserData = async (user: any) => {
     const localUser = useAuthStore.getState().currentUser;
@@ -147,7 +161,6 @@ function App() {
     }
 
     try {
-      // Fetch birth profile
       const { data: birthRecords } = await supabase
         .from("birth_profiles")
         .select("*")
@@ -156,7 +169,6 @@ function App() {
 
       const record = birthRecords?.[0];
 
-      // Fetch display name
       const { data: profileData } = await supabase
         .from("profiles")
         .select("display_name")
@@ -192,7 +204,6 @@ function App() {
       if (birthData) setBirthData(birthData);
     } catch (err) {
       console.warn("[App] Load error:", err);
-      // Use local data as fallback
       if (birthData) {
         const newUser: User = {
           id: user.id,
@@ -223,7 +234,9 @@ function App() {
 
   if (isRecovery) return <AuthScreen />;
 
-  if (loading) {
+  // Keep loading until currentUser is ready if session exists
+  const isBusy = loading || (sessionUser && !currentUser);
+  if (isBusy) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-[#0B0D1A] text-slate-800 dark:text-white">
         <div className="text-center">
@@ -234,7 +247,7 @@ function App() {
     );
   }
 
-  // KEY FIX: Show AuthScreen if no Supabase session
+  // No Supabase session
   if (!sessionUser) {
     return <AuthScreen />;
   }
