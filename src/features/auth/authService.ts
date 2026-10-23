@@ -56,8 +56,7 @@ async function migrateGuestData(guestId: string | number, newUserId: string) {
 
     const guestUser = await db.users.get(guestId as number);
     if (guestUser?.birthData) {
-      await supabase.from("birth_profiles").delete().eq("user_id", newUserId);
-      await supabase.from("birth_profiles").insert({
+      await supabase.from("birth_profiles").upsert({
         user_id: newUserId,
         year: guestUser.birthData.year,
         month: guestUser.birthData.month,
@@ -65,7 +64,7 @@ async function migrateGuestData(guestId: string | number, newUserId: string) {
         mother_name: guestUser.birthData.motherName,
         birth_time: guestUser.birthData.birthTime,
         birth_place: guestUser.birthData.birthPlace,
-      });
+      }, { onConflict: "user_id" });
     }
 
     await db.users.delete(guestId as number);
@@ -166,10 +165,12 @@ export async function updateUserBirthData(userId: string | number, birthData: Bi
   // Always save to localStorage as a reliable backup
   try {
     localStorage.setItem("luma_birth_backup", JSON.stringify(birthData));
-  } catch {}
+    console.log("[BirthData] Saved to localStorage backup:", birthData);
+  } catch (e) {
+    console.error("[BirthData] Failed to save localStorage backup:", e);
+  }
 
   if (typeof userId === "string") {
-    // Use upsert instead of delete+insert to avoid data loss on error
     const { error } = await supabase.from("birth_profiles").upsert({
       user_id: userId,
       year: birthData.year,
@@ -184,8 +185,10 @@ export async function updateUserBirthData(userId: string | number, birthData: Bi
       console.error("[updateUserBirthData] Supabase error:", error);
       throw new Error(`Birth Profile Error: ${error.message}`);
     }
+    console.log("[BirthData] Saved to Supabase successfully");
   } else {
     await db.users.update(userId, { birthData });
+    console.log("[BirthData] Saved to Dexie successfully");
   }
 
   const currentUser = useAuthStore.getState().currentUser;

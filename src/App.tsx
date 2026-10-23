@@ -46,7 +46,6 @@ function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [sessionUser, setSessionUser] = useState<any>(null);
 
-  // Theme
   useEffect(() => {
     if (themeMode === "dark") {
       document.documentElement.classList.add("dark");
@@ -55,7 +54,6 @@ function App() {
     }
   }, [themeMode]);
 
-  // RTL + recovery hash
   useEffect(() => {
     document.documentElement.setAttribute("lang", "fa");
     document.documentElement.setAttribute("dir", "rtl");
@@ -64,13 +62,11 @@ function App() {
     }
   }, []);
 
-  // Splash auto-dismiss
   useEffect(() => {
     const timer = setTimeout(() => setShowSplash(false), 2000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Auth initialization
   useEffect(() => {
     if (!hasRehydrated) return;
 
@@ -113,10 +109,8 @@ function App() {
     });
 
     return () => subscription.unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasRehydrated]);
 
-  // Fallback: rebuild currentUser from storeBirthData if session exists but currentUser is null
   useEffect(() => {
     if (!loading && !currentUser && sessionUser && hasValidBirthData(storeBirthData)) {
       console.log("[App] Fallback: rebuilding currentUser from storeBirthData");
@@ -129,14 +123,12 @@ function App() {
       };
       setCurrentUser(newUser);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, currentUser, sessionUser, storeBirthData]);
+  }, [loading, currentUser, sessionUser, storeBirthData, setCurrentUser]);
 
   const loadUserData = async (user: any) => {
     const localUser = useAuthStore.getState().currentUser;
     const birthBackup = readBirthBackup();
 
-    // Priority: localUser.birthData > storeBirthData > birthBackup
     let birthData: BirthData | undefined;
     if (hasValidBirthData(localUser?.birthData)) {
       birthData = localUser!.birthData;
@@ -219,7 +211,6 @@ function App() {
     }
   };
 
-  // Splash screen
   if (showSplash) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#0B0D1A] text-white">
@@ -234,7 +225,6 @@ function App() {
 
   if (isRecovery) return <AuthScreen />;
 
-  // Keep loading until currentUser is ready if session exists
   const isBusy = loading || (sessionUser && !currentUser);
   if (isBusy) {
     return (
@@ -247,12 +237,10 @@ function App() {
     );
   }
 
-  // No Supabase session
   if (!sessionUser) {
     return <AuthScreen />;
   }
 
-  // User is logged in: check birth data
   const userBirthData = currentUser?.birthData || storeBirthData || readBirthBackup();
   if (!hasValidBirthData(userBirthData)) {
     return <ProfileSetupScreen />;

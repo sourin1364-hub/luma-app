@@ -12,7 +12,9 @@ import { PersianDateInput, PersianTimeInput } from "../../components/ui/PersianD
 
 export function ProfileSetupScreen() {
   const currentUser = useAuthStore((s) => s.currentUser);
+  const storeBirthData = useAuthStore((s) => s.birthData);
   const setCurrentUser = useAuthStore((s) => s.setCurrentUser);
+  const setBirthData = useAuthStore((s) => s.setBirthData);
   const language = useAppStore((s) => s.language);
   const setCurrentRoute = useAppStore((s) => s.setCurrentRoute);
   const isFa = language === "fa";
@@ -41,29 +43,34 @@ export function ProfileSetupScreen() {
   }, [citySearch]);
 
   useEffect(() => {
-    if (currentUser?.birthData) {
-      setBirthDate({
-        year: currentUser.birthData.year || 1370,
-        month: currentUser.birthData.month || 1,
-        day: currentUser.birthData.day || 1,
-      });
-      setMotherName(currentUser.birthData.motherName || "");
+    console.log("[ProfileSetup] currentUser:", currentUser);
+    console.log("[ProfileSetup] storeBirthData:", storeBirthData);
 
-      if (currentUser.birthData.birthTime) {
-        const parts = currentUser.birthData.birthTime.split(" ");
+    const bd = currentUser?.birthData || storeBirthData;
+    if (bd) {
+      console.log("[ProfileSetup] Loading birthData into form:", bd);
+      setBirthDate({
+        year: bd.year || 1370,
+        month: bd.month || 1,
+        day: bd.day || 1,
+      });
+      setMotherName(bd.motherName || "");
+
+      if (bd.birthTime) {
+        const parts = bd.birthTime.split(" ");
         if (parts[0]) {
           const [h, m] = parts[0].split(":");
           setBirthTime({ hour: Number(h) || 12, minute: Number(m) || 0 });
         }
       }
 
-      if (currentUser.birthData.birthPlace) {
-        const foundCity = CITIES.find((c) => c.name === currentUser.birthData?.birthPlace);
+      if (bd.birthPlace) {
+        const foundCity = CITIES.find((c) => c.name === bd.birthPlace);
         if (foundCity) setSelectedCity(foundCity);
       }
     }
     if (currentUser?.username) setDisplayName(currentUser.username);
-  }, [currentUser]);
+  }, [currentUser, storeBirthData]);
 
   const handleCancel = () => {
     if (isEditing) {
@@ -108,9 +115,10 @@ export function ProfileSetupScreen() {
       console.error("[ProfileSetup] localStorage backup failed:", err);
     }
 
-    // 2. Save to Zustand state immediately (triggers persist)
+    // 2. Save to Zustand state immediately (both currentUser and birthData)
     const updatedUser = { ...currentUser, birthData: newBirthData };
     setCurrentUser(updatedUser);
+    setBirthData(newBirthData);
     console.log("[ProfileSetup] Zustand state updated");
 
     // 3. Navigate immediately so user isn't stuck
@@ -133,7 +141,6 @@ export function ProfileSetupScreen() {
       console.log("[ProfileSetup] Server sync completed");
     } catch (err: any) {
       console.error("[ProfileSetup] Birth sync error:", err);
-      // Don't show error to user - data is saved locally
     } finally {
       setLoading(false);
     }
@@ -143,7 +150,7 @@ export function ProfileSetupScreen() {
     <div className="min-h-screen bg-slate-100 dark:bg-[#0B0D1A] text-slate-800 dark:text-white p-6 flex flex-col items-center" dir="rtl">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
         <h1 className="text-2xl font-bold text-[#D6B56D] mb-6 text-center">
-          {isEditing ? (isFa ? "ویرایش اطلاعات تولد" : "Edit Birth Info") : (isFa ? "تکمیل پروفایل" : "Complete Profile")}
+          {isEditing ? (isFa ? "ویرایش اطلاعات تولد" : "Edit Birth Info") : (isFa ? "تکمیل پروایل" : "Complete Profile")}
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
