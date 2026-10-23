@@ -2,11 +2,10 @@ import { useState, useEffect, useMemo } from "react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useAppStore } from "../../store/useAppStore";
 import { updateUserBirthData } from "../auth/authService";
-import { supabase } from "../../lib/supabase";
 import { Button } from "../../components/ui/button";
 import { Label } from "../../components/ui/label";
 import { motion } from "framer-motion";
-import { MapPin, Search } from "lucide-react";
+import { MapPin, Search, X } from "lucide-react";
 import { CITIES, type City } from "../../lib/cities";
 import { PersianDateInput, PersianTimeInput } from "../../components/ui/PersianDate";
 
@@ -25,21 +24,21 @@ export function ProfileSetupScreen() {
   const [showCityList, setShowCityList] = useState(false);
   const [motherName, setMotherName] = useState("");
 
-  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const isEditing = !!currentUser?.birthData && typeof currentUser.birthData.year === "number" && currentUser.birthData.year > 1200;
 
   const filteredCities = useMemo(() => {
     if (!citySearch.trim()) return CITIES;
     const query = citySearch.toLowerCase();
-    return CITIES.filter(
-      (c) =>
-        c.name.toLowerCase().includes(query) ||
-        (c.province && c.province.toLowerCase().includes(query)) ||
-        c.country.toLowerCase().includes(query)
+    return CITIES.filter(c =>
+      c.name.toLowerCase().includes(query) ||
+      (c.province && c.province.toLowerCase().includes(query)) ||
+      c.country.toLowerCase().includes(query)
     );
   }, [citySearch]);
 
-  // Load existing birthData from currentUser if available
   useEffect(() => {
     if (currentUser?.birthData) {
       setBirthDate({
@@ -58,12 +57,20 @@ export function ProfileSetupScreen() {
       }
 
       if (currentUser.birthData.birthPlace) {
-        const foundCity = CITIES.find((c) => c.name === currentUser.birthData?.birthPlace);
+        const foundCity = CITIES.find(c => c.name === currentUser.birthData?.birthPlace);
         if (foundCity) setSelectedCity(foundCity);
       }
     }
     if (currentUser?.username) setDisplayName(currentUser.username);
   }, [currentUser]);
+
+  const handleCancel = () => {
+    if (isEditing) {
+      setCurrentRoute("profile");
+    } else {
+      setCurrentRoute("home");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +86,7 @@ export function ProfileSetupScreen() {
       return;
     }
 
-    setSaving(true);
+    setLoading(true);
 
     const newBirthData = {
       year: birthDate.year,
@@ -90,58 +97,39 @@ export function ProfileSetupScreen() {
       birthPlace: selectedCity.name,
     };
 
+    // 1. Save to Zustand state immediately (triggers persist)
+    const updatedUser = { ...currentUser, birthData: newBirthData };
+    setCurrentUser(updatedUser);
+
+    // 2. Also save directly to localStorage as extra backup
     try {
-      // 1. Save to local store IMMEDIATELY so Zustand persist writes to localStorage
-      setCurrentUser({ ...currentUser, birthData: newBirthData });
+      localStorage.setItem("luma_birth_backup", JSON.stringify(newBirthData));
+    } catch {}
 
-      // 2. Save display name to profiles
-      if (typeof currentUser.id === "string") {
-        const { error: profileErr } = await supabase
-          .from("profiles")
-          .upsert({
-            id: currentUser.id,
-            display_name: displayName.trim(),
-            username: currentUser.username,
-          });
-        if (profileErr) console.error("Profile sync err:", profileErr);
+    // 3. Navigate immediately so user isn't stuck
+    setCurrentRoute(isEditing ? "profile" : "home");
 
-        // 3. Save birth data to Supabase
-        await updateUserBirthData(currentUser.id, newBirthData);
-      } else {
-        // Guest / Dexie user
-        await updateUserBirthData(currentUser.id, newBirthData);
-      }
-
-      // 4. Navigate after successful save
-      const isEditing = !!currentUser.birthData;
-      setCurrentRoute(isEditing ? "profile" : "home");
+    // 4. Sync to server in background
+    try {
+      await updateUserBirthData(currentUser.id, newBirthData);
     } catch (err: any) {
-      console.error("Save error:", err);
-      setError(isFa ? "خطا در ذخیره اطلاعات. لطفاً دوباره تلاش کنید." : "Error saving data. Please try again.");
+      console.error("Birth sync error:", err);
+      // Don't show error to user - data is saved locally
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[var(--bg-main)] px-4 py-8">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
-      >
-        <h2 className="text-2xl font-bold text-[var(--text-main)] mb-2 text-center">
-          {isFa ? "تکمیل پروفایل" : "Complete Profile"}
-        </h2>
-        <p className="text-sm text-[var(--text-muted)] mb-6 text-center">
-          {isFa
-            ? "اطلاعات تولد خود را وارد کنید تا چارت شما محاسبه شود."
-            : "Enter your birth details to calculate your chart."}
-        </p>
+    <div className="min-h-screen bg-[#0B0D1A] text-white p-6 flex flex-col items-center" dir="rtl">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
+        <h1 className="text-2xl font-bold text-[#D6B56D] mb-6 text-center">
+          {isEditing ? (isFa ? "ویرایش اطلاعات تولد" : "Edit Birth Info") : (isFa ? "تکمیل پروفایل" : "Complete Profile")}
+        </h1>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label>نام نمایشی</Label>
+            <Label className="text-[#D6B56D] mb-1 block">نام نمایشی</Label>
             <input
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
@@ -151,57 +139,53 @@ export function ProfileSetupScreen() {
           </div>
 
           <div>
-            <Label>تاریخ تولد (شمسی)</Label>
+            <Label className="text-[#D6B56D] mb-1 block">تاریخ تولد (شمسی)</Label>
             <PersianDateInput value={birthDate} onChange={setBirthDate} />
           </div>
 
           <div>
-            <Label>ساعت تولد</Label>
+            <Label className="text-[#D6B56D] mb-1 block">ساعت تولد</Label>
             <PersianTimeInput value={birthTime} onChange={setBirthTime} />
           </div>
 
-          <div className="relative">
-            <Label>شهر تولد</Label>
-            <button
-              type="button"
+          <div>
+            <Label className="text-[#D6B56D] mb-1 block">شهر تولد</Label>
+            <div
               onClick={() => setShowCityList(!showCityList)}
               className="w-full bg-[var(--bg-card)] border border-[var(--border-gold)] rounded-xl px-4 py-3 cursor-pointer flex justify-between items-center"
             >
-              <span className="text-[var(--text-main)]">
-                {selectedCity.name} ({selectedCity.province ? `${selectedCity.province} - ` : ""}
-                {selectedCity.country})
-              </span>
+              <span>{selectedCity.name} ({selectedCity.province ? `${selectedCity.province} - ` : ""}{selectedCity.country})</span>
               <MapPin className="w-4 h-4 text-[#D6B56D]" />
-            </button>
+            </div>
 
             {showCityList && (
-              <div className="absolute z-50 w-full mt-2 bg-[#0B0D1A] border border-[var(--border-gold)] rounded-xl max-h-60 overflow-y-auto shadow-xl">
-                <div className="sticky top-0 bg-[#0B0D1A] p-2 border-b border-slate-700">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <div className="mt-2 bg-[#17182B] border border-[#D6B56D]/30 rounded-xl max-h-60 overflow-y-auto">
+                <div className="p-2 sticky top-0 bg-[#17182B] border-b border-[#D6B56D]/20">
+                  <div className="flex items-center gap-2">
+                    <Search className="w-4 h-4 text-[#D6B56D]" />
                     <input
                       value={citySearch}
                       onChange={(e) => setCitySearch(e.target.value)}
+                      className="w-full bg-transparent border-none text-sm text-white focus:outline-none"
                       placeholder="جستجوی شهر..."
-                      className="w-full bg-[#17182B] border-none rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:outline-none"
                       autoFocus
                     />
+                    {citySearch && (
+                      <button type="button" onClick={() => setCitySearch("")}>
+                        <X className="w-4 h-4 text-slate-400" />
+                      </button>
+                    )}
                   </div>
                 </div>
                 {filteredCities.map((city) => (
                   <div
-                    key={city.name + city.country}
-                    onClick={() => {
-                      setSelectedCity(city);
-                      setShowCityList(false);
-                      setCitySearch("");
-                    }}
+                    key={city.name}
+                    onClick={() => { setSelectedCity(city); setShowCityList(false); setCitySearch(""); }}
                     className="px-4 py-3 hover:bg-[rgba(214,181,109,0.1)] cursor-pointer border-b border-slate-700/50 last:border-0 flex justify-between items-center"
                   >
-                    <span className="text-[var(--text-main)]">{city.name}</span>
-                    <span className="text-xs text-[var(--text-muted)]">
-                      {city.province ? `${city.province} - ` : ""}
-                      {city.country}
+                    <span>{city.name}</span>
+                    <span className="text-xs text-slate-400">
+                      {city.province ? `${city.province} - ` : ""}{city.country}
                     </span>
                   </div>
                 ))}
@@ -210,7 +194,7 @@ export function ProfileSetupScreen() {
           </div>
 
           <div>
-            <Label>نام مادر</Label>
+            <Label className="text-[#D6B56D] mb-1 block">نام مادر</Label>
             <input
               value={motherName}
               onChange={(e) => setMotherName(e.target.value)}
@@ -221,8 +205,18 @@ export function ProfileSetupScreen() {
 
           {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
-          <Button type="submit" disabled={saving} className="w-full btn-primary py-3">
-            {saving ? "در حال ذخیره..." : "ذخیره و ورود به برنامه"}
+          <Button type="submit" disabled={loading} className="w-full h-14 bg-[#D6B56D] hover:bg-amber-400 text-[#0B0D1A] rounded-full font-bold text-lg shadow-lg shadow-[#D6B56D]/20">
+            {loading ? "در حال ذخیره..." : (isEditing ? "ذخیره تغییرات" : "ذخیره و ورود به برنامه")}
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleCancel}
+            disabled={loading}
+            className="w-full h-12 rounded-full btn-outline"
+          >
+            انصراف
           </Button>
         </form>
       </motion.div>

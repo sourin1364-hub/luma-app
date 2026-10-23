@@ -5,8 +5,21 @@ import { AuthScreen } from "./features/auth/AuthScreen";
 import { HomeScreen } from "./features/auth/HomeScreen";
 import { ProfileSetupScreen } from "./features/chart/ProfileSetupScreen";
 import { supabase } from "./lib/supabase";
-import { type User } from "./db";
+import { type User, type BirthData } from "./db";
 import { SplashScreen } from "./components/SplashScreen";
+
+function readBirthBackup(): BirthData | null {
+  try {
+    const raw = localStorage.getItem("luma_birth_backup");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed.year === "number" && parsed.year > 1200) {
+        return parsed as BirthData;
+      }
+    }
+  } catch {}
+  return null;
+}
 
 function App() {
   const currentUser = useAuthStore((state) => state.currentUser);
@@ -45,6 +58,7 @@ function App() {
       }
 
       const localUser = useAuthStore.getState().currentUser;
+      const birthBackup = readBirthBackup();
 
       if (!navigator.onLine && localUser && localUser.id === sessionUser.id && localUser.birthData) {
         setLoading(false);
@@ -68,7 +82,8 @@ function App() {
 
         const displayName = profileData?.[0]?.display_name;
 
-        let birthData = localUser?.birthData;
+        let birthData: BirthData | undefined = localUser?.birthData || birthBackup || undefined;
+
         if (birthDataRecord) {
           const serverHasDate =
             typeof birthDataRecord.year === "number" &&
@@ -81,18 +96,19 @@ function App() {
               year: birthDataRecord.year,
               month: birthDataRecord.month,
               day: birthDataRecord.day,
-              motherName: birthDataRecord.mother_name || localUser?.birthData?.motherName || "",
-              birthTime: birthDataRecord.birth_time || localUser?.birthData?.birthTime || "",
-              birthPlace: birthDataRecord.birth_place || localUser?.birthData?.birthPlace || "",
+              motherName: birthDataRecord.mother_name || localUser?.birthData?.motherName || birthBackup?.motherName || "",
+              birthTime: birthDataRecord.birth_time || localUser?.birthData?.birthTime || birthBackup?.birthTime || "",
+              birthPlace: birthDataRecord.birth_place || localUser?.birthData?.birthPlace || birthBackup?.birthPlace || "",
             };
           } else {
+            // Server record exists but is incomplete - merge with local/backup
             birthData = {
-              year: localUser?.birthData?.year || birthDataRecord.year || 0,
-              month: localUser?.birthData?.month || birthDataRecord.month || 0,
-              day: localUser?.birthData?.day || birthDataRecord.day || 0,
-              motherName: birthDataRecord.mother_name || localUser?.birthData?.motherName || "",
-              birthTime: birthDataRecord.birth_time || localUser?.birthData?.birthTime || "",
-              birthPlace: birthDataRecord.birth_place || localUser?.birthData?.birthPlace || "",
+              year: localUser?.birthData?.year || birthBackup?.year || birthDataRecord.year || 0,
+              month: localUser?.birthData?.month || birthBackup?.month || birthDataRecord.month || 0,
+              day: localUser?.birthData?.day || birthBackup?.day || birthDataRecord.day || 0,
+              motherName: birthDataRecord.mother_name || localUser?.birthData?.motherName || birthBackup?.motherName || "",
+              birthTime: birthDataRecord.birth_time || localUser?.birthData?.birthTime || birthBackup?.birthTime || "",
+              birthPlace: birthDataRecord.birth_place || localUser?.birthData?.birthPlace || birthBackup?.birthPlace || "",
             };
           }
         }
@@ -102,12 +118,16 @@ function App() {
           username: displayName || sessionUser.user_metadata?.username || sessionUser.email?.split("@")[0] || "User",
           isGuest: false,
           createdAt: new Date(sessionUser.created_at).getTime(),
-          birthData: birthData,
+          birthData,
         };
 
         setCurrentUser(user);
       } catch (error) {
         console.warn("Network error while fetching user data. Using offline data.", error);
+        // If offline, try to restore from backup
+        if (birthBackup && localUser) {
+          setCurrentUser({ ...localUser, birthData: birthBackup });
+        }
       } finally {
         setLoading(false);
       }

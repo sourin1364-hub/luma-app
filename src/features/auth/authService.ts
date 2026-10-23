@@ -4,7 +4,7 @@ import { db, type User, type BirthData } from "../../db";
 
 export const GUEST_USERNAME = "guest";
 export const MIN_PASSWORD_LENGTH = 8;
-export const MIN_USERNAME_LENGTH = 2;
+export const MIN_USERNAME_LENGTH = 3;
 
 export type AuthErrorCode =
   | "EMPTY_FIELDS"
@@ -14,20 +14,13 @@ export type AuthErrorCode =
   | "USERNAME_TAKEN"
   | "INVALID_CREDENTIALS"
   | "UNKNOWN_ERROR"
-  | "INVALID_USERNAME_FORMAT"
-  | "EMAIL_NOT_CONFIRMED"
-  | "NETWORK_ERROR";
+  | "INVALID_USERNAME_FORMAT";
 
 export interface AuthResult {
   success: boolean;
   error?: AuthErrorCode;
   errorMessage?: string;
   user?: User;
-}
-
-function isValidUsername(username: string): boolean {
-  // Allow Persian (\u0600-\u06FF), Latin letters, numbers, underscore, space
-  return /^[\u0600-\u06FFa-zA-Z0-9_\s]{2,30}$/.test(username.trim());
 }
 
 async function migrateGuestData(guestId: string | number, newUserId: string) {
@@ -45,8 +38,6 @@ async function migrateGuestData(guestId: string | number, newUserId: string) {
       if (!error) {
         await db.progress.delete(guestId);
         await db.progress.put({ userId: newUserId, xp: guestProgress.xp, level: guestProgress.level });
-      } else {
-        console.error("[Migration] Failed to migrate XP:", error);
       }
     }
 
@@ -84,33 +75,24 @@ async function migrateGuestData(guestId: string | number, newUserId: string) {
   }
 }
 
-export async function registerUser(
-  username: string,
-  password: string,
-  email?: string
-): Promise<AuthResult> {
+export async function registerUser(username: string, password: string): Promise<AuthResult> {
   const trimmed = username.trim();
   if (!trimmed || !password) return { success: false, error: "EMPTY_FIELDS" };
   if (trimmed.length < MIN_USERNAME_LENGTH) return { success: false, error: "USERNAME_TOO_SHORT" };
-  if (!isValidUsername(trimmed)) return { success: false, error: "INVALID_USERNAME_FORMAT" };
+  if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) return { success: false, error: "INVALID_USERNAME_FORMAT" };
   if (password.length < MIN_PASSWORD_LENGTH) return { success: false, error: "PASSWORD_TOO_SHORT" };
 
-  // Use provided email if valid, otherwise generate from username
-  const finalEmail = email && email.includes("@") ? email.trim() : `${trimmed}@gmail.com`;
+  const email = `${trimmed}@gmail.com`;
 
   const { data, error } = await supabase.auth.signUp({
-    email: finalEmail,
+    email,
     password,
     options: { data: { username: trimmed } },
   });
 
   if (error) {
     console.error("Supabase signUp error:", error);
-    if (
-      error.message.includes("already registered") ||
-      error.message.includes("already exists") ||
-      error.message.includes("User already registered")
-    ) {
+    if (error.message.includes("already registered") || error.message.includes("already exists") || error.message.includes("User already registered")) {
       return { success: false, error: "USERNAME_TAKEN" };
     }
     return { success: false, error: "UNKNOWN_ERROR", errorMessage: error.message };
@@ -133,15 +115,12 @@ export async function registerUser(
   return { success: true, user };
 }
 
-export async function loginUser(
-  usernameOrEmail: string,
-  password: string
-): Promise<AuthResult> {
-  const trimmed = usernameOrEmail.trim();
+export async function loginUser(username: string, password: string): Promise<AuthResult> {
+  const trimmed = username.trim();
   if (!trimmed || !password) return { success: false, error: "EMPTY_FIELDS" };
+  if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) return { success: false, error: "INVALID_USERNAME_FORMAT" };
 
-  // If it looks like an email, use it directly; otherwise append @gmail.com
-  const email = trimmed.includes("@") ? trimmed : `${trimmed}@gmail.com`;
+  const email = `${trimmed}@gmail.com`;
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -157,7 +136,7 @@ export async function loginUser(
 
   const user: User = {
     id: data.user.id,
-    username: data.user.user_metadata?.username || trimmed.split("@")[0] || "User",
+    username: data.user.user_metadata?.username || trimmed,
     isGuest: false,
     createdAt: new Date(data.user.created_at).getTime(),
   };
@@ -183,14 +162,15 @@ export async function loginAsGuest(): Promise<AuthResult> {
   return { success: true, user: user! };
 }
 
-export async function updateUserBirthData(
-  userId: string | number,
-  birthData: BirthData
-): Promise<void> {
-  if (typeof userId === "string") {
-    await supabase.from("birth_profiles").delete().eq("user_id", userId);
+export async function updateUserBirthData(userId: string | number, birthData: BirthData): Promise<void> {
+  // Always save to localStorage as a reliable backup
+  try {
+    localStorage.setItem("luma_birth_backup", JSON.stringify(birthData));
+  } catch {}
 
-    const { error } = await supabase.from("birth_profiles").insert({
+  if (typeof userId === "string") {
+    // Use upsert instead of delete+insert to avoid data loss on error
+    const { error } = await supabase.from("birth_profiles").upsert({
       user_id: userId,
       year: birthData.year,
       month: birthData.month,
@@ -198,8 +178,12 @@ export async function updateUserBirthData(
       mother_name: birthData.motherName,
       birth_time: birthData.birthTime,
       birth_place: birthData.birthPlace,
-    });
-    if (error) throw new Error(`Birth Profile Error: ${error.message}`);
+    }, { onConflict: "user_id" });
+
+    if (error) {
+      console.error("[updateUserBirthData] Supabase error:", error);
+      throw new Error(`Birth Profile Error: ${error.message}`);
+    }
   } else {
     await db.users.update(userId, { birthData });
   }
