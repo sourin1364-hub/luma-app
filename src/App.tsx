@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useAuthStore } from "./store/useAuthStore";
 import { useAppStore } from "./store/useAppStore";
 import { AuthScreen } from "./features/auth/AuthScreen";
@@ -32,53 +32,21 @@ function hasValidBirthData(bd: BirthData | null | undefined): boolean {
   );
 }
 
-function getValidBirthData(
-  localUser: User | null,
-  storeBirthData: BirthData | null,
-  birthBackup: BirthData | null
-): BirthData | undefined {
-  if (hasValidBirthData(localUser?.birthData)) return localUser!.birthData;
-  if (hasValidBirthData(storeBirthData)) return storeBirthData!;
-  if (hasValidBirthData(birthBackup)) return birthBackup!;
-  return undefined;
-}
-
-// Simple inline splash screen to avoid external component issues
-function SimpleSplashScreen({ onFinish }: { onFinish: () => void }) {
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    timerRef.current = setTimeout(() => {
-      onFinish();
-    }, 2500);
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [onFinish]);
-
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#0B0D1A] text-white">
-      <div className="text-center">
-        <div className="text-6xl font-bold text-[#D6B56D] mb-4 tracking-widest">LUMA</div>
-        <div className="text-[#D6B56D]/80 text-lg">سفری به دنیای درون</div>
-        <div className="mt-8 animate-spin rounded-full h-8 w-8 border-b-2 border-[#D6B56D] mx-auto"></div>
-      </div>
-    </div>
-  );
-}
-
 function App() {
   const currentUser = useAuthStore((state) => state.currentUser);
   const storeBirthData = useAuthStore((state) => state.birthData);
   const hasRehydrated = useAuthStore((state) => state.hasRehydrated);
   const setCurrentUser = useAuthStore((state) => state.setCurrentUser);
   const setBirthData = useAuthStore((state) => state.setBirthData);
+  const logout = useAuthStore((state) => state.logout);
   const themeMode = useAppStore((state) => state.themeMode);
 
   const [loading, setLoading] = useState(true);
   const [isRecovery, setIsRecovery] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [sessionUser, setSessionUser] = useState<any>(null);
 
+  // Theme
   useEffect(() => {
     if (themeMode === "dark") {
       document.documentElement.classList.add("dark");
@@ -87,170 +55,173 @@ function App() {
     }
   }, [themeMode]);
 
+  // RTL + recovery hash
   useEffect(() => {
     document.documentElement.setAttribute("lang", "fa");
     document.documentElement.setAttribute("dir", "rtl");
-
     if (window.location.hash.includes("type=recovery")) {
       setIsRecovery(true);
     }
   }, []);
 
+  // Splash auto-dismiss
   useEffect(() => {
-    if (!hasRehydrated) {
-      console.log("[App] Waiting for rehydration...");
-      return;
-    }
+    const timer = setTimeout(() => setShowSplash(false), 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
-    console.log("[App] Rehydrated. currentUser:", currentUser?.id, "storeBirthData:", storeBirthData);
+  // Auth state: Supabase is the source of truth
+  useEffect(() => {
+    if (!hasRehydrated) return;
 
-    const checkUser = async (sessionUser: any) => {
-      if (!sessionUser) {
-        console.log("[App] No session user");
-        setLoading(false);
-        return;
-      }
-
-      const localUser = useAuthStore.getState().currentUser;
-      const birthBackup = readBirthBackup();
-
-      console.log("[App] localUser birthData:", localUser?.birthData);
-      console.log("[App] storeBirthData:", storeBirthData);
-      console.log("[App] birthBackup:", birthBackup);
-
-      const localValidData = getValidBirthData(localUser, storeBirthData, birthBackup);
-      console.log("[App] localValidData:", localValidData);
-
-      if (!navigator.onLine && localValidData) {
-        console.log("[App] Offline with valid local data");
-        const user: User = {
-          id: sessionUser.id,
-          username: localUser?.username || sessionUser.user_metadata?.username || sessionUser.email?.split("@")[0] || "User",
-          isGuest: false,
-          createdAt: new Date(sessionUser.created_at).getTime(),
-          birthData: localValidData,
-        };
-        setCurrentUser(user);
-        setBirthData(localValidData);
-        setLoading(false);
-        return;
-      }
-
+    const initAuth = async () => {
       try {
-        const { data: birthDataRecords } = await supabase
-          .from("birth_profiles")
-          .select("*")
-          .eq("user_id", sessionUser.id)
-          .limit(1);
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("[App] Session:", session?.user?.id || "null");
 
-        const birthDataRecord = birthDataRecords?.[0];
-        console.log("[App] Server birth data:", birthDataRecord);
-
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("display_name")
-          .eq("id", sessionUser.id)
-          .limit(1);
-
-        const displayName = profileData?.[0]?.display_name;
-
-        let birthData: BirthData | undefined;
-
-        if (birthDataRecord) {
-          const serverHasValidData = hasValidBirthData({
-            year: birthDataRecord.year,
-            month: birthDataRecord.month,
-            day: birthDataRecord.day,
-            motherName: birthDataRecord.mother_name,
-            birthTime: birthDataRecord.birth_time,
-            birthPlace: birthDataRecord.birth_place,
-          });
-
-          if (serverHasValidData) {
-            birthData = {
-              year: birthDataRecord.year,
-              month: birthDataRecord.month,
-              day: birthDataRecord.day,
-              motherName: birthDataRecord.mother_name || "",
-              birthTime: birthDataRecord.birth_time || "",
-              birthPlace: birthDataRecord.birth_place || "",
-            };
-            console.log("[App] Using valid server data");
-          } else {
-            birthData = localValidData;
-            console.log("[App] Server incomplete, using local data:", birthData);
+        if (!session?.user) {
+          // No session: clear any stale local user and show auth
+          if (currentUser && !currentUser.isGuest) {
+            console.log("[App] No session but stale user exists -> logout");
+            logout();
           }
-        } else {
-          birthData = localValidData;
-          console.log("[App] No server record, using local data:", birthData);
+          setLoading(false);
+          return;
         }
 
-        const user: User = {
-          id: sessionUser.id,
-          username: displayName || localUser?.username || sessionUser.user_metadata?.username || sessionUser.email?.split("@")[0] || "User",
-          isGuest: false,
-          createdAt: new Date(sessionUser.created_at).getTime(),
-          birthData,
-        };
-
-        console.log("[App] Setting user with birthData:", birthData);
-        setCurrentUser(user);
-        if (birthData) setBirthData(birthData);
-      } catch (error) {
-        console.warn("[App] Network error:", error);
-        if (localValidData) {
-          const user: User = {
-            id: sessionUser.id,
-            username: localUser?.username || sessionUser.user_metadata?.username || sessionUser.email?.split("@")[0] || "User",
-            isGuest: false,
-            createdAt: new Date(sessionUser.created_at).getTime(),
-            birthData: localValidData,
-          };
-          setCurrentUser(user);
-        }
-      } finally {
+        // Session exists: build user
+        setSessionUser(session.user);
+        await loadUserData(session.user);
+      } catch (err) {
+        console.error("[App] Auth init error:", err);
         setLoading(false);
       }
     };
+
+    initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("[App] Auth event:", event);
       if (event === "PASSWORD_RECOVERY") {
         setIsRecovery(true);
       }
-      if (session?.user) {
-        checkUser(session.user);
-      } else if (event === "SIGNED_OUT") {
-        const current = useAuthStore.getState().currentUser;
-        if (current && !current.isGuest) {
-          useAuthStore.getState().logout();
-        }
+      if (event === "SIGNED_OUT") {
+        logout();
+        setSessionUser(null);
         setLoading(false);
+      } else if (session?.user) {
+        setSessionUser(session.user);
+        loadUserData(session.user);
       }
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("[App] Initial session:", session?.user?.id);
-      if (session?.user) {
-        checkUser(session.user);
-      } else {
-        setLoading(false);
-      }
-    }).catch((err) => {
-      console.warn("[App] getSession error:", err);
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, [hasRehydrated, setCurrentUser, setBirthData, storeBirthData]);
+  }, [hasRehydrated]);
 
+  const loadUserData = async (user: any) => {
+    const localUser = useAuthStore.getState().currentUser;
+    const birthBackup = readBirthBackup();
+
+    // Priority: localUser.birthData > storeBirthData > birthBackup
+    let birthData: BirthData | undefined;
+    if (hasValidBirthData(localUser?.birthData)) {
+      birthData = localUser!.birthData;
+    } else if (hasValidBirthData(storeBirthData)) {
+      birthData = storeBirthData!;
+    } else if (hasValidBirthData(birthBackup)) {
+      birthData = birthBackup!;
+    }
+
+    if (!navigator.onLine && birthData) {
+      const newUser: User = {
+        id: user.id,
+        username: localUser?.username || user.user_metadata?.username || user.email?.split("@")[0] || "User",
+        isGuest: false,
+        createdAt: new Date(user.created_at).getTime(),
+        birthData,
+      };
+      setCurrentUser(newUser);
+      setBirthData(birthData);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Fetch birth profile
+      const { data: birthRecords } = await supabase
+        .from("birth_profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .limit(1);
+
+      const record = birthRecords?.[0];
+
+      // Fetch display name
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("id", user.id)
+        .limit(1);
+
+      const displayName = profileData?.[0]?.display_name;
+
+      if (record) {
+        const serverData: BirthData = {
+          year: record.year,
+          month: record.month,
+          day: record.day,
+          motherName: record.mother_name || "",
+          birthTime: record.birth_time || "",
+          birthPlace: record.birth_place || "",
+        };
+        if (hasValidBirthData(serverData)) {
+          birthData = serverData;
+          console.log("[App] Using server birth data");
+        }
+      }
+
+      const newUser: User = {
+        id: user.id,
+        username: displayName || localUser?.username || user.user_metadata?.username || user.email?.split("@")[0] || "User",
+        isGuest: false,
+        createdAt: new Date(user.created_at).getTime(),
+        birthData,
+      };
+
+      setCurrentUser(newUser);
+      if (birthData) setBirthData(birthData);
+    } catch (err) {
+      console.warn("[App] Load error:", err);
+      // Use local data as fallback
+      if (birthData) {
+        const newUser: User = {
+          id: user.id,
+          username: localUser?.username || user.user_metadata?.username || user.email?.split("@")[0] || "User",
+          isGuest: false,
+          createdAt: new Date(user.created_at).getTime(),
+          birthData,
+        };
+        setCurrentUser(newUser);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Splash screen
   if (showSplash) {
-    return <SimpleSplashScreen onFinish={() => setShowSplash(false)} />;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0B0D1A] text-white">
+        <div className="text-center">
+          <div className="text-6xl font-bold text-[#D6B56D] mb-4 tracking-widest">LUMA</div>
+          <div className="text-[#D6B56D]/80 text-lg">سفری به دنیای درون</div>
+          <div className="mt-8 animate-spin rounded-full h-8 w-8 border-b-2 border-[#D6B56D] mx-auto"></div>
+        </div>
+      </div>
+    );
   }
 
-  if (isRecovery) {
-    return <AuthScreen />;
-  }
+  if (isRecovery) return <AuthScreen />;
 
   if (loading) {
     return (
@@ -263,16 +234,14 @@ function App() {
     );
   }
 
-  if (!currentUser) {
+  // KEY FIX: Show AuthScreen if no Supabase session
+  if (!sessionUser) {
     return <AuthScreen />;
   }
 
-  const userBirthData = currentUser.birthData || storeBirthData || readBirthBackup();
-  const hasValidData = hasValidBirthData(userBirthData);
-
-  console.log("[App] Render check - hasValidData:", hasValidData, "birthData:", userBirthData);
-
-  if (!hasValidData) {
+  // User is logged in: check birth data
+  const userBirthData = currentUser?.birthData || storeBirthData || readBirthBackup();
+  if (!hasValidBirthData(userBirthData)) {
     return <ProfileSetupScreen />;
   }
 
