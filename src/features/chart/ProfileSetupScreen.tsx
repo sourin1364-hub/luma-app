@@ -121,7 +121,7 @@ export function ProfileSetupScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0D1A] text-white p-6 flex flex-col items-center" dir="rtl">
+    <div className="min-h-screen bg-slate-100 dark:bg-[#0B0D1A] text-slate-800 dark:text-white p-6 flex flex-col items-center" dir="rtl">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
         <h1 className="text-2xl font-bold text-[#D6B56D] mb-6 text-center">
           {isEditing ? (isFa ? "ویرایش اطلاعات تولد" : "Edit Birth Info") : (isFa ? "تکمیل پروفایل" : "Complete Profile")}
