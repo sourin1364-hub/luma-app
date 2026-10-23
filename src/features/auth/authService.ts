@@ -25,6 +25,11 @@ export interface AuthResult {
   user?: User;
 }
 
+function isValidUsername(username: string): boolean {
+  // Allow Persian (\u0600-\u06FF), Latin letters, numbers, underscore, space
+  return /^[\u0600-\u06FFa-zA-Z0-9_\s]{2,30}$/.test(username.trim());
+}
+
 async function migrateGuestData(guestId: string | number, newUserId: string) {
   try {
     console.log("[Migration] Starting guest data migration...");
@@ -79,30 +84,19 @@ async function migrateGuestData(guestId: string | number, newUserId: string) {
   }
 }
 
-function isValidUsername(username: string): boolean {
-  return /^[\u0600-\u06FFa-zA-Z0-9_\s]{2,30}$/.test(username.trim());
-}
-
 export async function registerUser(
   username: string,
   password: string,
   email?: string
 ): Promise<AuthResult> {
   const trimmed = username.trim();
-  if (!trimmed || !password) {
-    return { success: false, error: "EMPTY_FIELDS" };
-  }
-  if (trimmed.length < MIN_USERNAME_LENGTH) {
-    return { success: false, error: "USERNAME_TOO_SHORT" };
-  }
-  if (!isValidUsername(trimmed)) {
-    return { success: false, error: "INVALID_USERNAME_FORMAT" };
-  }
-  if (password.length < MIN_PASSWORD_LENGTH) {
-    return { success: false, error: "PASSWORD_TOO_SHORT" };
-  }
+  if (!trimmed || !password) return { success: false, error: "EMPTY_FIELDS" };
+  if (trimmed.length < MIN_USERNAME_LENGTH) return { success: false, error: "USERNAME_TOO_SHORT" };
+  if (!isValidUsername(trimmed)) return { success: false, error: "INVALID_USERNAME_FORMAT" };
+  if (password.length < MIN_PASSWORD_LENGTH) return { success: false, error: "PASSWORD_TOO_SHORT" };
 
-  const finalEmail = email && email.includes("@") ? email : `${trimmed}@luma.guest`;
+  // Use provided email if valid, otherwise generate from username
+  const finalEmail = email && email.includes("@") ? email.trim() : `${trimmed}@gmail.com`;
 
   const { data, error } = await supabase.auth.signUp({
     email: finalEmail,
@@ -122,22 +116,14 @@ export async function registerUser(
     return { success: false, error: "UNKNOWN_ERROR", errorMessage: error.message };
   }
 
-  if (!data.user) {
-    return { success: false, error: "INVALID_CREDENTIALS" };
-  }
+  if (!data.user) return { success: false, error: "INVALID_CREDENTIALS" };
 
   const user: User = {
     id: data.user.id,
     username: trimmed,
     isGuest: false,
-    createdAt: Date.now(),
+    createdAt: new Date(data.user.created_at).getTime(),
   };
-
-  await supabase.from("profiles").upsert({
-    id: data.user.id,
-    username: trimmed,
-    display_name: trimmed,
-  });
 
   const previousUser = useAuthStore.getState().currentUser;
   if (previousUser && previousUser.isGuest && previousUser.id) {
@@ -147,13 +133,15 @@ export async function registerUser(
   return { success: true, user };
 }
 
-export async function loginUser(username: string, password: string): Promise<AuthResult> {
-  const trimmed = username.trim();
-  if (!trimmed || !password) {
-    return { success: false, error: "EMPTY_FIELDS" };
-  }
+export async function loginUser(
+  usernameOrEmail: string,
+  password: string
+): Promise<AuthResult> {
+  const trimmed = usernameOrEmail.trim();
+  if (!trimmed || !password) return { success: false, error: "EMPTY_FIELDS" };
 
-  const email = trimmed.includes("@") ? trimmed : `${trimmed}@luma.guest`;
+  // If it looks like an email, use it directly; otherwise append @gmail.com
+  const email = trimmed.includes("@") ? trimmed : `${trimmed}@gmail.com`;
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -165,46 +153,13 @@ export async function loginUser(username: string, password: string): Promise<Aut
     return { success: false, error: "INVALID_CREDENTIALS", errorMessage: error.message };
   }
 
-  if (!data.user) {
-    return { success: false, error: "INVALID_CREDENTIALS" };
-  }
-
-  const { data: profileData } = await supabase
-    .from("profiles")
-    .select("display_name, username")
-    .eq("id", data.user.id)
-    .limit(1);
-
-  const profile = profileData?.[0];
-
-  const { data: birthDataRecords } = await supabase
-    .from("birth_profiles")
-    .select("*")
-    .eq("user_id", data.user.id)
-    .limit(1);
-
-  const birthDataRecord = birthDataRecords?.[0];
+  if (!data.user) return { success: false, error: "INVALID_CREDENTIALS" };
 
   const user: User = {
     id: data.user.id,
-    username:
-      profile?.display_name ||
-      profile?.username ||
-      (data.user.user_metadata?.username as string) ||
-      data.user.email?.split("@")[0] ||
-      "User",
+    username: data.user.user_metadata?.username || trimmed.split("@")[0] || "User",
     isGuest: false,
     createdAt: new Date(data.user.created_at).getTime(),
-    birthData: birthDataRecord
-      ? {
-          year: birthDataRecord.year,
-          month: birthDataRecord.month,
-          day: birthDataRecord.day,
-          motherName: birthDataRecord.mother_name,
-          birthTime: birthDataRecord.birth_time,
-          birthPlace: birthDataRecord.birth_place,
-        }
-      : undefined,
   };
 
   const previousUser = useAuthStore.getState().currentUser;
@@ -231,7 +186,7 @@ export async function loginAsGuest(): Promise<AuthResult> {
 export async function updateUserBirthData(
   userId: string | number,
   birthData: BirthData
-): Promise<{ error?: string }> {
+): Promise<void> {
   if (typeof userId === "string") {
     await supabase.from("birth_profiles").delete().eq("user_id", userId);
 
@@ -253,6 +208,4 @@ export async function updateUserBirthData(
   if (currentUser && currentUser.id === userId) {
     useAuthStore.getState().setCurrentUser({ ...currentUser, birthData });
   }
-
-  return {};
 }

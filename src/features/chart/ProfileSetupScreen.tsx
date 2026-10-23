@@ -53,7 +53,7 @@ export function ProfileSetupScreen() {
         const parts = currentUser.birthData.birthTime.split(" ");
         if (parts[0]) {
           const [h, m] = parts[0].split(":");
-          setBirthTime({ hour: Number(h) || 12, minute: Number(m) || 0 });
+          setBirthTime({ hour: Number(h) || 12, minute: Number(m) || 0 };
         }
       }
 
@@ -91,9 +91,11 @@ export function ProfileSetupScreen() {
     };
 
     try {
-      // 1. Save to Supabase FIRST
+      // 1. Save to local store IMMEDIATELY so Zustand persist writes to localStorage
+      setCurrentUser({ ...currentUser, birthData: newBirthData });
+
+      // 2. Save display name to profiles
       if (typeof currentUser.id === "string") {
-        // Update profile display name
         const { error: profileErr } = await supabase
           .from("profiles")
           .upsert({
@@ -103,17 +105,14 @@ export function ProfileSetupScreen() {
           });
         if (profileErr) console.error("Profile sync err:", profileErr);
 
-        // Update birth data
+        // 3. Save birth data to Supabase
         await updateUserBirthData(currentUser.id, newBirthData);
       } else {
         // Guest / Dexie user
         await updateUserBirthData(currentUser.id, newBirthData);
       }
 
-      // 2. Update local store AFTER successful save
-      setCurrentUser({ ...currentUser, birthData: newBirthData });
-
-      // 3. Navigate
+      // 4. Navigate after successful save
       const isEditing = !!currentUser.birthData;
       setCurrentRoute(isEditing ? "profile" : "home");
     } catch (err: any) {
