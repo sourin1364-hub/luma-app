@@ -17,14 +17,39 @@ function readBirthBackup(): BirthData | null {
         return parsed as BirthData;
       }
     }
-  } catch {}
+  } catch (e) {
+    console.error("[App] Failed to read birth backup:", e);
+  }
   return null;
+}
+
+function hasValidBirthData(bd: BirthData | null | undefined): boolean {
+  if (!bd) return false;
+  return (
+    typeof bd.year === "number" && bd.year > 1200 &&
+    typeof bd.month === "number" && bd.month > 0 &&
+    typeof bd.day === "number" && bd.day > 0 &&
+    !!bd.motherName?.trim()
+  );
+}
+
+function getValidBirthData(
+  localUser: User | null,
+  storeBirthData: BirthData | null,
+  birthBackup: BirthData | null
+): BirthData | undefined {
+  if (hasValidBirthData(localUser?.birthData)) return localUser!.birthData;
+  if (hasValidBirthData(storeBirthData)) return storeBirthData!;
+  if (hasValidBirthData(birthBackup)) return birthBackup!;
+  return undefined;
 }
 
 function App() {
   const currentUser = useAuthStore((state) => state.currentUser);
+  const storeBirthData = useAuthStore((state) => state.birthData);
   const hasRehydrated = useAuthStore((state) => state.hasRehydrated);
   const setCurrentUser = useAuthStore((state) => state.setCurrentUser);
+  const setBirthData = useAuthStore((state) => state.setBirthData);
   const themeMode = useAppStore((state) => state.themeMode);
 
   const [loading, setLoading] = useState(true);
@@ -49,10 +74,16 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!hasRehydrated) return;
+    if (!hasRehydrated) {
+      console.log("[App] Waiting for rehydration...");
+      return;
+    }
+
+    console.log("[App] Rehydrated. currentUser:", currentUser?.id, "storeBirthData:", storeBirthData);
 
     const checkUser = async (sessionUser: any) => {
       if (!sessionUser) {
+        console.log("[App] No session user");
         setLoading(false);
         return;
       }
@@ -60,7 +91,24 @@ function App() {
       const localUser = useAuthStore.getState().currentUser;
       const birthBackup = readBirthBackup();
 
-      if (!navigator.onLine && localUser && localUser.id === sessionUser.id && localUser.birthData) {
+      console.log("[App] localUser birthData:", localUser?.birthData);
+      console.log("[App] storeBirthData:", storeBirthData);
+      console.log("[App] birthBackup:", birthBackup);
+
+      const localValidData = getValidBirthData(localUser, storeBirthData, birthBackup);
+      console.log("[App] localValidData:", localValidData);
+
+      if (!navigator.onLine && localValidData) {
+        console.log("[App] Offline with valid local data");
+        const user: User = {
+          id: sessionUser.id,
+          username: localUser?.username || sessionUser.user_metadata?.username || sessionUser.email?.split("@")[0] || "User",
+          isGuest: false,
+          createdAt: new Date(sessionUser.created_at).getTime(),
+          birthData: localValidData,
+        };
+        setCurrentUser(user);
+        setBirthData(localValidData);
         setLoading(false);
         return;
       }
@@ -73,6 +121,7 @@ function App() {
           .limit(1);
 
         const birthDataRecord = birthDataRecords?.[0];
+        console.log("[App] Server birth data:", birthDataRecord);
 
         const { data: profileData } = await supabase
           .from("profiles")
@@ -82,51 +131,59 @@ function App() {
 
         const displayName = profileData?.[0]?.display_name;
 
-        let birthData: BirthData | undefined = localUser?.birthData || birthBackup || undefined;
+        let birthData: BirthData | undefined;
 
         if (birthDataRecord) {
-          const serverHasDate =
-            typeof birthDataRecord.year === "number" &&
-            typeof birthDataRecord.month === "number" &&
-            typeof birthDataRecord.day === "number" &&
-            birthDataRecord.year > 1200;
+          const serverHasValidData = hasValidBirthData({
+            year: birthDataRecord.year,
+            month: birthDataRecord.month,
+            day: birthDataRecord.day,
+            motherName: birthDataRecord.mother_name,
+            birthTime: birthDataRecord.birth_time,
+            birthPlace: birthDataRecord.birth_place,
+          });
 
-          if (serverHasDate) {
+          if (serverHasValidData) {
             birthData = {
               year: birthDataRecord.year,
               month: birthDataRecord.month,
               day: birthDataRecord.day,
-              motherName: birthDataRecord.mother_name || localUser?.birthData?.motherName || birthBackup?.motherName || "",
-              birthTime: birthDataRecord.birth_time || localUser?.birthData?.birthTime || birthBackup?.birthTime || "",
-              birthPlace: birthDataRecord.birth_place || localUser?.birthData?.birthPlace || birthBackup?.birthPlace || "",
+              motherName: birthDataRecord.mother_name || "",
+              birthTime: birthDataRecord.birth_time || "",
+              birthPlace: birthDataRecord.birth_place || "",
             };
+            console.log("[App] Using valid server data");
           } else {
-            // Server record exists but is incomplete - merge with local/backup
-            birthData = {
-              year: localUser?.birthData?.year || birthBackup?.year || birthDataRecord.year || 0,
-              month: localUser?.birthData?.month || birthBackup?.month || birthDataRecord.month || 0,
-              day: localUser?.birthData?.day || birthBackup?.day || birthDataRecord.day || 0,
-              motherName: birthDataRecord.mother_name || localUser?.birthData?.motherName || birthBackup?.motherName || "",
-              birthTime: birthDataRecord.birth_time || localUser?.birthData?.birthTime || birthBackup?.birthTime || "",
-              birthPlace: birthDataRecord.birth_place || localUser?.birthData?.birthPlace || birthBackup?.birthPlace || "",
-            };
+            birthData = localValidData;
+            console.log("[App] Server incomplete, using local data:", birthData);
           }
+        } else {
+          birthData = localValidData;
+          console.log("[App] No server record, using local data:", birthData);
         }
 
         const user: User = {
           id: sessionUser.id,
-          username: displayName || sessionUser.user_metadata?.username || sessionUser.email?.split("@")[0] || "User",
+          username: displayName || localUser?.username || sessionUser.user_metadata?.username || sessionUser.email?.split("@")[0] || "User",
           isGuest: false,
           createdAt: new Date(sessionUser.created_at).getTime(),
           birthData,
         };
 
+        console.log("[App] Setting user with birthData:", birthData);
         setCurrentUser(user);
+        if (birthData) setBirthData(birthData);
       } catch (error) {
-        console.warn("Network error while fetching user data. Using offline data.", error);
-        // If offline, try to restore from backup
-        if (birthBackup && localUser) {
-          setCurrentUser({ ...localUser, birthData: birthBackup });
+        console.warn("[App] Network error:", error);
+        if (localValidData) {
+          const user: User = {
+            id: sessionUser.id,
+            username: localUser?.username || sessionUser.user_metadata?.username || sessionUser.email?.split("@")[0] || "User",
+            isGuest: false,
+            createdAt: new Date(sessionUser.created_at).getTime(),
+            birthData: localValidData,
+          };
+          setCurrentUser(user);
         }
       } finally {
         setLoading(false);
@@ -134,6 +191,7 @@ function App() {
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("[App] Auth event:", event);
       if (event === "PASSWORD_RECOVERY") {
         setIsRecovery(true);
       }
@@ -149,18 +207,19 @@ function App() {
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("[App] Initial session:", session?.user?.id);
       if (session?.user) {
         checkUser(session.user);
       } else {
         setLoading(false);
       }
     }).catch((err) => {
-      console.warn("Failed to get session while offline", err);
+      console.warn("[App] getSession error:", err);
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, [hasRehydrated, setCurrentUser]);
+  }, [hasRehydrated, setCurrentUser, setBirthData, storeBirthData]);
 
   if (showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
@@ -172,7 +231,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0B0D1A] text-white">
+      <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-[#0B0D1A] text-slate-800 dark:text-white">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D6B56D] mx-auto mb-4"></div>
           <p className="text-[#D6B56D]">در حال بارگذاری...</p>
@@ -185,12 +244,12 @@ function App() {
     return <AuthScreen />;
   }
 
-  const hasValidBirthData =
-    currentUser.birthData &&
-    typeof currentUser.birthData.year === "number" &&
-    currentUser.birthData.year > 1200;
+  const userBirthData = currentUser.birthData || storeBirthData || readBirthBackup();
+  const hasValidData = hasValidBirthData(userBirthData);
 
-  if (!hasValidBirthData) {
+  console.log("[App] Render check - hasValidData:", hasValidData, "birthData:", userBirthData);
+
+  if (!hasValidData) {
     return <ProfileSetupScreen />;
   }
 
