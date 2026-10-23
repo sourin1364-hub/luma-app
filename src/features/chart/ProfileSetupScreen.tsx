@@ -117,7 +117,7 @@ export function ProfileSetupScreen() {
       setCurrentRoute(isEditing ? "profile" : "home");
     } catch (err: any) {
       console.error("Save error:", err);
-      setError(isFa ? "خطا در ذیره اطلاعات. لطفاً دوباره تلاش کنید." : "Error saving data. Please try again.");
+      setError(isFa ? "خطا در ذخیره اطلاعات. لطفاً دوباره تلاش کنید." : "Error saving data. Please try again.");
     } finally {
       setSaving(false);
     }
