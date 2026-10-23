@@ -48,7 +48,7 @@ function App() {
       // Get locally persisted user data (including birthData if saved)
       const localUser = useAuthStore.getState().currentUser;
 
-      // If offline and we already have this user's data with birthData, keep it
+      // If offline and we already have this user\'s data with birthData, keep it
       if (!navigator.onLine && localUser && localUser.id === sessionUser.id && localUser.birthData) {
         setAuthChecked(true);
         return;
