@@ -25,22 +25,22 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "luma-auth-v2",
-      version: 2,
+      version: 1,
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        currentUser: state.currentUser,
-      }),
-      migrate: (persistedState: any, version) => {
-        if (version < 2) {
-          return { currentUser: null, hasRehydrated: false };
-        }
-        return persistedState as AuthState;
-      },
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.setHasRehydrated(true);
         }
       },
+      partialize: (state) => ({
+        currentUser: state.currentUser
+          ? {
+              ...state.currentUser,
+              passwordHash: undefined,
+              passwordSalt: undefined,
+            }
+          : null,
+      }),
     }
   )
 );
