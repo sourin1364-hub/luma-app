@@ -14,7 +14,7 @@ function App() {
   const setCurrentUser = useAuthStore((state) => state.setCurrentUser);
   const themeMode = useAppStore((state) => state.themeMode);
 
-  const [authChecked, setAuthChecked] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isRecovery, setIsRecovery] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
 
@@ -33,19 +33,21 @@ function App() {
     if (window.location.hash.includes("type=recovery")) {
       setIsRecovery(true);
     }
+  }, []);
 
+  useEffect(() => {
     if (!hasRehydrated) return;
 
     const checkUser = async (sessionUser: any) => {
       if (!sessionUser) {
-        setAuthChecked(true);
+        setLoading(false);
         return;
       }
 
       const localUser = useAuthStore.getState().currentUser;
 
       if (!navigator.onLine && localUser && localUser.id === sessionUser.id && localUser.birthData) {
-        setAuthChecked(true);
+        setLoading(false);
         return;
       }
 
@@ -67,29 +69,112 @@ function App() {
         const displayName = profileData?.[0]?.display_name;
 
         let birthData = localUser?.birthData;
-        if (birthDataRecord && 
-            typeof birthDataRecord.year === "number" && 
-            typeof birthDataRecord.month === "number" && 
+        if (birthDataRecord) {
+          const serverHasDate =
+            typeof birthDataRecord.year === "number" &&
+            typeof birthDataRecord.month === "number" &&
             typeof birthDataRecord.day === "number" &&
-            birthDataRecord.year > 1200) {
-          birthData = {
-            year: birthDataRecord.year,
-            month: birthDataRecord.month,
-            day: birthDataRecord.day,
-            motherName: birthDataRecord.mother_name || localUser?.birthData?.motherName || "",
-            birthTime: birthDataRecord.birth_time || localUser?.birthData?.birthTime || "",
-            birthPlace: birthDataRecord.birth_place || localUser?.birthData?.birthPlace || "",
-          };
-        } else if (birthDataRecord) {
-          console.warn("[App] birth_profiles record incomplete, merging with local data");
-          birthData = {
-            year: localUser?.birthData?.year || birthDataRecord.year || 0,
-            month: localUser?.birthData?.month || birthDataRecord.month || 0,
-            day: localUser?.birthData?.day || birthDataRecord.day || 0,
-            motherName: birthDataRecord.mother_name || localUser?.birthData?.motherName || "",
-            birthTime: birthDataRecord.birth_time || localUser?.birthData?.birthTime || "",
-            birthPlace: birthDataRecord.birth_place || localUser?.birthData?.birthPlace || "",
-          };
+            birthDataRecord.year > 1200;
+
+          if (serverHasDate) {
+            birthData = {
+              year: birthDataRecord.year,
+              month: birthDataRecord.month,
+              day: birthDataRecord.day,
+              motherName: birthDataRecord.mother_name || localUser?.birthData?.motherName || "",
+              birthTime: birthDataRecord.birth_time || localUser?.birthData?.birthTime || "",
+              birthPlace: birthDataRecord.birth_place || localUser?.birthData?.birthPlace || "",
+            };
+          } else {
+            birthData = {
+              year: localUser?.birthData?.year || birthDataRecord.year || 0,
+              month: localUser?.birthData?.month || birthDataRecord.month || 0,
+              day: localUser?.birthData?.day || birthDataRecord.day || 0,
+              motherName: birthDataRecord.mother_name || localUser?.birthData?.motherName || "",
+              birthTime: birthDataRecord.birth_time || localUser?.birthData?.birthTime || "",
+              birthPlace: birthDataRecord.birth_place || localUser?.birthData?.birthPlace || "",
+            };
+          }
         }
 
-        const user
+        const user: User = {
+          id: sessionUser.id,
+          username: displayName || sessionUser.user_metadata?.username || sessionUser.email?.split("@")[0] || "User",
+          isGuest: false,
+          createdAt: new Date(sessionUser.created_at).getTime(),
+          birthData: birthData,
+        };
+
+        setCurrentUser(user);
+      } catch (error) {
+        console.warn("Network error while fetching user data. Using offline data.", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsRecovery(true);
+      }
+      if (session?.user) {
+        checkUser(session.user);
+      } else if (event === "SIGNED_OUT") {
+        const current = useAuthStore.getState().currentUser;
+        if (current && !current.isGuest) {
+          useAuthStore.getState().logout();
+        }
+        setLoading(false);
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        checkUser(session.user);
+      } else {
+        setLoading(false);
+      }
+    }).catch((err) => {
+      console.warn("Failed to get session while offline", err);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [hasRehydrated, setCurrentUser]);
+
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
+
+  if (isRecovery) {
+    return <AuthScreen />;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0B0D1A] text-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D6B56D] mx-auto mb-4"></div>
+          <p className="text-[#D6B56D]">در حال بارگذاری...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return <AuthScreen />;
+  }
+
+  const hasValidBirthData =
+    currentUser.birthData &&
+    typeof currentUser.birthData.year === "number" &&
+    currentUser.birthData.year > 1200;
+
+  if (!hasValidBirthData) {
+    return <ProfileSetupScreen />;
+  }
+
+  return <HomeScreen />;
+}
+
+export default App;
